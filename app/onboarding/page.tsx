@@ -25,7 +25,10 @@ export default async function OnboardingPage() {
   return (
     <main className="flex-1 px-4 py-12">
       <div className="mx-auto max-w-2xl">
-        <h1 className="text-2xl font-bold tracking-tight text-stone-900">
+        <p className="text-sm font-medium uppercase tracking-wide text-brand-600">
+          Step 1 of 2
+        </p>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight text-stone-900">
           Welcome to Numa
         </h1>
         <p className="mt-2 text-stone-600">

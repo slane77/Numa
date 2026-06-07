@@ -70,5 +70,6 @@ export async function completeOnboarding(
   });
   if (weightError) return { error: weightError.message };
 
-  redirect("/dashboard");
+  // Continue to the taste-profiling step.
+  redirect("/onboarding/tastes");
 }
