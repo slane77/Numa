@@ -1,27 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { inputClass } from "@/components/ui";
-
-type PlannedMeal = {
-  meal: string;
-  title: string;
-  servings: number;
-  calories: number | null;
-  protein_g: number | null;
-  uses_pantry_items: string[];
-};
-type PlannedDay = { date: string; meals: PlannedMeal[] };
-type ShoppingItem = {
-  item_name: string;
-  quantity: number | null;
-  unit: string | null;
-};
-type MealPlanResult = {
-  summary: string;
-  days: PlannedDay[];
-  shopping_list: ShoppingItem[];
-};
+import { saveAiPlan } from "./actions";
+import type { MealPlanResult } from "@/lib/ai/mealPlan";
 
 const MEAL_LABELS: Record<string, string> = {
   breakfast: "Breakfast",
@@ -31,6 +14,7 @@ const MEAL_LABELS: Record<string, string> = {
 };
 
 export default function AiPlanner() {
+  const router = useRouter();
   const [days, setDays] = useState(7);
   const [startDate, setStartDate] = useState(
     new Date().toISOString().slice(0, 10),
@@ -39,6 +23,25 @@ export default function AiPlanner() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<MealPlanResult | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    if (!result) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await saveAiPlan(result);
+      if ("error" in res) {
+        setError(res.error);
+      } else {
+        router.push(`/plans/${res.planId}`);
+      }
+    } catch {
+      setError("Couldn't save the plan. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function generate() {
     setLoading(true);
@@ -126,10 +129,24 @@ export default function AiPlanner() {
       {result && (
         <div className="space-y-6">
           <div className="rounded-2xl border border-brand-200 bg-brand-50 p-5">
-            <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-brand-700">
-              Plan summary
-            </h2>
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-brand-700">
+                Plan summary
+              </h2>
+              <button
+                type="button"
+                onClick={save}
+                disabled={saving}
+                className="shrink-0 rounded-full bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
+              >
+                {saving ? "Saving…" : "Save as meal plan"}
+              </button>
+            </div>
             <p className="text-sm text-stone-700">{result.summary}</p>
+            <p className="mt-2 text-xs text-brand-700/70">
+              Saving creates an editable meal plan, adds each meal to your
+              recipes, and builds a shopping list.
+            </p>
           </div>
 
           {result.days?.map((day) => (

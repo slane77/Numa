@@ -4,11 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { requireUser, getProfile } from "@/lib/auth/user";
 import AppNav from "@/components/AppNav";
 import { Card } from "@/components/ui";
-import {
-  setItemPurchased,
-  setListStatus,
-  deleteShoppingList,
-} from "../actions";
+import { setListStatus, deleteShoppingList } from "../actions";
+import ShoppingItems from "./ShoppingItems";
 import type { Tables } from "@/lib/types/database";
 
 type Item = Tables<"shopping_list_items">;
@@ -106,59 +103,16 @@ export default async function ShoppingListPage({
           </div>
 
           <Card title={`To buy (${toBuy.length})`}>
-            {toBuy.length === 0 ? (
-              <p className="text-sm text-stone-500">
-                Nothing to buy — your pantry has it all covered. 🎉
-              </p>
-            ) : (
-              <ul className="divide-y divide-stone-100">
-                {toBuy.map((item) => (
-                  <li key={item.id} className="py-2.5">
-                    <form
-                      action={setItemPurchased}
-                      className="flex items-center gap-3"
-                    >
-                      <input type="hidden" name="id" value={item.id} />
-                      <input
-                        type="hidden"
-                        name="shopping_list_id"
-                        value={list.id}
-                      />
-                      <input
-                        type="hidden"
-                        name="purchased"
-                        value={(!item.purchased).toString()}
-                      />
-                      <button
-                        type="submit"
-                        aria-label={
-                          item.purchased ? "Mark not bought" : "Mark bought"
-                        }
-                        className={`flex h-5 w-5 items-center justify-center rounded border ${
-                          item.purchased
-                            ? "border-brand-600 bg-brand-600 text-white"
-                            : "border-stone-300"
-                        }`}
-                      >
-                        {item.purchased ? "✓" : ""}
-                      </button>
-                      <span
-                        className={`flex-1 text-sm ${
-                          item.purchased
-                            ? "text-stone-400 line-through"
-                            : "text-stone-800"
-                        }`}
-                      >
-                        {item.item_name}
-                      </span>
-                      <span className="text-sm text-stone-500">
-                        {qtyLabel(item)}
-                      </span>
-                    </form>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <ShoppingItems
+              listId={list.id}
+              items={toBuy.map((i) => ({
+                id: i.id,
+                item_name: i.item_name,
+                quantity: i.quantity != null ? Number(i.quantity) : null,
+                unit: i.unit,
+                purchased: i.purchased,
+              }))}
+            />
           </Card>
 
           {haveAlready.length > 0 && (
