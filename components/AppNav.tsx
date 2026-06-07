@@ -37,6 +37,7 @@ export default function AppNav({ tier }: { tier?: "free" | "premium" }) {
           <NavLink href="/shopping">Shopping</NavLink>
           <NavLink href="/pantry">Pantry</NavLink>
           <NavLink href="/preferences">Preferences</NavLink>
+          <NavLink href="/chat">Chat</NavLink>
           <form action="/auth/signout" method="post">
             <button
               type="submit"

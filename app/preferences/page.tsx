@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser, getProfile } from "@/lib/auth/user";
 import AppNav from "@/components/AppNav";
@@ -38,6 +39,22 @@ export default async function PreferencesPage() {
             title="Food preferences"
             subtitle="Tell Numa what to feature, avoid, and never include. These shape your meal plans."
           />
+
+          <Link
+            href="/chat"
+            className="flex items-center justify-between rounded-2xl border border-brand-200 bg-brand-50 p-4 transition hover:bg-brand-100"
+          >
+            <div>
+              <div className="font-medium text-stone-900">
+                ✨ Chat to set these up
+              </div>
+              <div className="mt-0.5 text-sm text-stone-600">
+                Tell Numa about your tastes in a quick conversation — it fills
+                these in for you.
+              </div>
+            </div>
+            <span className="text-brand-700">→</span>
+          </Link>
 
           <Card title="Add a preference">
             <PreferenceForm />
