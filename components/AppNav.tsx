@@ -34,6 +34,7 @@ export default function AppNav({ tier }: { tier?: "free" | "premium" }) {
           <NavLink href="/weight">Weight</NavLink>
           <NavLink href="/recipes">Recipes</NavLink>
           <NavLink href="/plans">Plans</NavLink>
+          <NavLink href="/shopping">Shopping</NavLink>
           <NavLink href="/pantry">Pantry</NavLink>
           <NavLink href="/preferences">Preferences</NavLink>
           <form action="/auth/signout" method="post">

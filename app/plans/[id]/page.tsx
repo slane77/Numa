@@ -6,6 +6,7 @@ import AppNav from "@/components/AppNav";
 import { Card } from "@/components/ui";
 import AddItemForm from "./AddItemForm";
 import { deletePlan, deletePlanItem } from "../actions";
+import { generateShoppingList } from "@/app/shopping/actions";
 import type { Database } from "@/lib/types/database";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
@@ -42,13 +43,23 @@ function eachDay(start: string, end: string): string[] {
   return days;
 }
 
+const PLAN_ERRORS: Record<string, string> = {
+  empty: "Add at least one meal before generating a shopping list.",
+  no_ingredients:
+    "The recipes in this plan have no ingredients, so there's nothing to shop for.",
+  list_failed: "Couldn't create the shopping list. Please try again.",
+};
+
 export default async function PlanDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   await requireUser();
   const { id } = await params;
+  const { error: errorKey } = await searchParams;
   const supabase = await createClient();
   const profile = await getProfile();
 
@@ -112,16 +123,33 @@ export default async function PlanDetailPage({
                 {new Date(plan.end_date).toLocaleDateString()}
               </p>
             </div>
-            <form action={deletePlan}>
-              <input type="hidden" name="id" value={plan.id} />
-              <button
-                type="submit"
-                className="rounded-full border border-stone-300 px-4 py-2 text-sm text-stone-600 hover:border-red-300 hover:text-red-600"
-              >
-                Delete plan
-              </button>
-            </form>
+            <div className="flex items-center gap-2">
+              <form action={generateShoppingList}>
+                <input type="hidden" name="meal_plan_id" value={plan.id} />
+                <button
+                  type="submit"
+                  className="rounded-full bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+                >
+                  Generate shopping list
+                </button>
+              </form>
+              <form action={deletePlan}>
+                <input type="hidden" name="id" value={plan.id} />
+                <button
+                  type="submit"
+                  className="rounded-full border border-stone-300 px-4 py-2 text-sm text-stone-600 hover:border-red-300 hover:text-red-600"
+                >
+                  Delete plan
+                </button>
+              </form>
+            </div>
           </div>
+
+          {errorKey && PLAN_ERRORS[errorKey] && (
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+              {PLAN_ERRORS[errorKey]}
+            </p>
+          )}
 
           <Card title="Add a meal">
             <AddItemForm planId={plan.id} days={days} recipes={recipes} />
