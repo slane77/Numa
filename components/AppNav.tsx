@@ -1,15 +1,15 @@
 import Link from "next/link";
-import { NavLink } from "@/components/ui";
 import Logo from "@/components/Logo";
+import NavMenu from "@/components/NavMenu";
 
 /**
- * Top navigation for authenticated pages. Server component; sign-out posts to a
- * route handler so it works without client JS.
+ * Top navigation for authenticated pages. The link list collapses into a
+ * hamburger menu on small screens (see NavMenu).
  */
 export default function AppNav({ tier }: { tier?: "free" | "premium" }) {
   return (
     <header className="sticky top-0 z-30 border-b border-stone-200/80 bg-white/80 backdrop-blur">
-      <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-3">
+      <div className="relative mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-3">
         <div className="flex items-center gap-2">
           <Link href="/dashboard">
             <Logo markClass="h-7 w-7" textClass="text-lg" />
@@ -26,26 +26,7 @@ export default function AppNav({ tier }: { tier?: "free" | "premium" }) {
             </span>
           )}
         </div>
-        <nav className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-sm">
-          <NavLink href="/dashboard">Dashboard</NavLink>
-          <NavLink href="/goals">Goals</NavLink>
-          <NavLink href="/weight">Weight</NavLink>
-          <NavLink href="/recipes">Recipes</NavLink>
-          <NavLink href="/plans">Plans</NavLink>
-          <NavLink href="/shopping">Shopping</NavLink>
-          <NavLink href="/pantry">Pantry</NavLink>
-          <NavLink href="/preferences">Preferences</NavLink>
-          <NavLink href="/chat">Chat</NavLink>
-          <NavLink href="/billing">Billing</NavLink>
-          <form action="/auth/signout" method="post">
-            <button
-              type="submit"
-              className="text-stone-500 hover:text-stone-800"
-            >
-              Sign out
-            </button>
-          </form>
-        </nav>
+        <NavMenu />
       </div>
     </header>
   );
