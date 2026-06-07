@@ -3,15 +3,36 @@
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  /* Numa brand: warm greens for a "fresh kitchen" feel */
+
+  /* Numa brand: fresh, leafy greens */
   --color-brand-50: #f0fdf4;
   --color-brand-100: #dcfce7;
   --color-brand-200: #bbf7d0;
-  --color-brand-500: #16a34a;
-  --color-brand-600: #15803d;
-  --color-brand-700: #166534;
+  --color-brand-300: #86efac;
+  --color-brand-400: #4ade80;
+  --color-brand-500: #22c55e;
+  --color-brand-600: #16a34a;
+  --color-brand-700: #15803d;
+  --color-brand-800: #166534;
+  --color-brand-900: #14532d;
+
+  /* Warm accent for energy / highlights */
+  --color-accent-400: #fb923c;
+  --color-accent-500: #f97316;
 }
 
 html {
   font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Soft, layered card shadow reused across the app */
+@utility shadow-card {
+  box-shadow:
+    0 1px 2px rgba(17, 24, 39, 0.04),
+    0 10px 30px -16px rgba(17, 24, 39, 0.12);
 }

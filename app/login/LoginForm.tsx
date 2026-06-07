@@ -41,7 +41,7 @@ export default function LoginForm({
           password,
           options: {
             data: { display_name: displayName || null },
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=/welcome`,
           },
         });
         if (error) throw error;
@@ -54,7 +54,7 @@ export default function LoginForm({
           setMode("signin");
           return;
         }
-        router.push("/onboarding");
+        router.push("/welcome");
         router.refresh();
       } else {
         const { error } = await supabase.auth.signInWithPassword({

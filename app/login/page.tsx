@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getUser } from "@/lib/auth/user";
+import Logo from "@/components/Logo";
 import LoginForm from "./LoginForm";
 
 export default async function LoginPage({
@@ -19,16 +20,13 @@ export default async function LoginPage({
   const initialMode = params.mode === "signup" ? "signup" : "signin";
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center px-6 py-12">
+    <main className="flex flex-1 flex-col items-center justify-center bg-gradient-to-b from-brand-50 via-stone-50 to-stone-50 px-6 py-12">
       <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <Link
-            href="/"
-            className="text-2xl font-semibold tracking-tight text-brand-700"
-          >
-            Numa
+        <div className="mb-8 flex flex-col items-center text-center">
+          <Link href="/">
+            <Logo textClass="text-2xl" markClass="h-8 w-8" />
           </Link>
-          <p className="mt-2 text-sm text-stone-600">
+          <p className="mt-3 text-sm text-stone-600">
             {initialMode === "signup"
               ? "Create your account to start planning."
               : "Welcome back — sign in to continue."}

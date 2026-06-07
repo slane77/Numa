@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { NavLink } from "@/components/ui";
+import Logo from "@/components/Logo";
 
 /**
  * Top navigation for authenticated pages. Server component; sign-out posts to a
@@ -7,14 +8,11 @@ import { NavLink } from "@/components/ui";
  */
 export default function AppNav({ tier }: { tier?: "free" | "premium" }) {
   return (
-    <header className="border-b border-stone-200 bg-white">
+    <header className="sticky top-0 z-30 border-b border-stone-200/80 bg-white/80 backdrop-blur">
       <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-3">
         <div className="flex items-center gap-2">
-          <Link
-            href="/dashboard"
-            className="text-lg font-semibold tracking-tight text-brand-700"
-          >
-            Numa
+          <Link href="/dashboard">
+            <Logo markClass="h-7 w-7" textClass="text-lg" />
           </Link>
           {tier && (
             <span
