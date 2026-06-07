@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
-import { requirePremium, PremiumRequiredError } from "@/lib/auth/requirePremium";
 import { getAnthropic, MODEL_FAST } from "@/lib/ai/anthropic";
 import type { Database } from "@/lib/types/database";
 
@@ -53,17 +52,15 @@ const SAVE_TOOL: Anthropic.Tool = {
 };
 
 export async function POST(request: NextRequest) {
-  // Premium gate (AI feature).
-  let userId: string;
-  try {
-    const profile = await requirePremium();
-    userId = profile.id;
-  } catch (err) {
-    if (err instanceof PremiumRequiredError) {
-      return NextResponse.json({ error: err.message }, { status: err.status });
-    }
-    throw err;
+  // The taste chat is free — just require a signed-in user.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }
+  const userId = user.id;
 
   const body = await request.json().catch(() => ({}));
   const incoming: ChatMessage[] = Array.isArray(body?.messages)
@@ -86,8 +83,6 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
-
-  const supabase = await createClient();
 
   // Load existing preferences for context + de-duplication.
   const { data: existing } = await supabase
