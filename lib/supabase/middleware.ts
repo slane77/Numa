@@ -38,14 +38,29 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // IMPORTANT: do not run code between createServerClient and getUser().
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // IMPORTANT: do not run code between createServerClient and the auth check.
+  //
+  // Fast path: verify the access token's claims locally (no Auth-server round
+  // trip when the project uses asymmetric JWT signing keys). Only fall back to
+  // getUser() — which contacts the Auth server AND refreshes the session,
+  // writing rotated cookies — when the token is missing or close to expiring.
+  // This removes a network hop from the vast majority of requests at scale.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const claims = claimsData?.claims;
+  const expMs = typeof claims?.exp === "number" ? claims.exp * 1000 : 0;
+  const tokenHealthy = !!claims?.sub && expMs - Date.now() > 60_000;
+
+  let userId: string | null = tokenHealthy ? (claims!.sub as string) : null;
+  if (!tokenHealthy) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    userId = user?.id ?? null;
+  }
 
   const { pathname } = request.nextUrl;
 
-  if (!user && !isPublicPath(pathname)) {
+  if (!userId && !isPublicPath(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("redirectedFrom", pathname);

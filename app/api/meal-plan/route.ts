@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { requirePremium, PremiumRequiredError } from "@/lib/auth/requirePremium";
 import { generateMealPlan } from "@/lib/ai/mealPlan";
+import { enforceRateLimit } from "@/lib/ai/rateLimit";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -34,8 +35,27 @@ export async function POST(request: NextRequest) {
       : new Date().toISOString().slice(0, 10);
   const fast = Boolean(body?.fast);
 
-  // 3) Gather inputs (RLS scopes every query to this user).
   const supabase = await createClient();
+
+  // 2b) Rate limit to protect AI spend (per user, rolling 24h).
+  const limit = await enforceRateLimit(
+    supabase,
+    userId,
+    "meal_plan",
+    25,
+    24 * 60 * 60 * 1000,
+  );
+  if (!limit.ok) {
+    return NextResponse.json(
+      {
+        error:
+          "You've reached today's AI meal-plan limit. Please try again tomorrow.",
+      },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSec) } },
+    );
+  }
+
+  // 3) Gather inputs (RLS scopes every query to this user).
   const [goalRes, prefsRes, pantryRes, recipesRes] = await Promise.all([
     supabase
       .from("goals")

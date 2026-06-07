@@ -195,33 +195,45 @@ export type Database = {
         Row: {
           activity_level: string | null
           created_at: string
+          current_period_end: string | null
           display_name: string | null
           dob: string | null
           height_cm: number | null
           id: string
           sex: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_status: string | null
           tier: Database["public"]["Enums"]["tier_type"]
           updated_at: string
         }
         Insert: {
           activity_level?: string | null
           created_at?: string
+          current_period_end?: string | null
           display_name?: string | null
           dob?: string | null
           height_cm?: number | null
           id: string
           sex?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string | null
           tier?: Database["public"]["Enums"]["tier_type"]
           updated_at?: string
         }
         Update: {
           activity_level?: string | null
           created_at?: string
+          current_period_end?: string | null
           display_name?: string | null
           dob?: string | null
           height_cm?: number | null
           id?: string
           sex?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string | null
           tier?: Database["public"]["Enums"]["tier_type"]
           updated_at?: string
         }
@@ -379,6 +391,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      usage_events: {
+        Row: {
+          created_at: string
+          feature: string
+          id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feature: string
+          id?: never
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feature?: string
+          id?: never
+          user_id?: string
+        }
+        Relationships: []
       }
       weight_logs: {
         Row: {

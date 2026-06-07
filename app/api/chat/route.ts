@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { getAnthropic, MODEL_FAST } from "@/lib/ai/anthropic";
+import { enforceRateLimit } from "@/lib/ai/rateLimit";
 import type { Database } from "@/lib/types/database";
 
 export const runtime = "nodejs";
@@ -61,6 +62,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }
   const userId = user.id;
+
+  // Rate limit chat turns (per user, rolling 24h) to protect AI spend.
+  const limit = await enforceRateLimit(
+    supabase,
+    userId,
+    "chat",
+    200,
+    24 * 60 * 60 * 1000,
+  );
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: "You've reached today's chat limit. Please try again tomorrow." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSec) } },
+    );
+  }
 
   const body = await request.json().catch(() => ({}));
   const incoming: ChatMessage[] = Array.isArray(body?.messages)
