@@ -28,12 +28,21 @@ export default async function DashboardPage() {
   // No active goal => user hasn't finished onboarding.
   if (!goal) redirect("/onboarding");
 
-  const { data: latestLog } = await supabase
-    .from("weight_logs")
-    .select("weight_kg, logged_at")
-    .order("logged_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const [{ data: latestLog }, { count: pantryCount }, { count: prefCount }] =
+    await Promise.all([
+      supabase
+        .from("weight_logs")
+        .select("weight_kg, logged_at")
+        .order("logged_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("inventory")
+        .select("id", { count: "exact", head: true }),
+      supabase
+        .from("food_preferences")
+        .select("id", { count: "exact", head: true }),
+    ]);
 
   const isPremium = profile?.tier === "premium";
   const name = profile?.display_name?.split(" ")[0];
@@ -94,6 +103,27 @@ export default async function DashboardPage() {
             </Card>
           </div>
 
+          {/* Quick links to manage the inputs that drive planning */}
+          <Card title="Set up your plan">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <QuickLink
+                href="/goals"
+                title="Goals"
+                detail="Manage targets"
+              />
+              <QuickLink
+                href="/pantry"
+                title="Pantry"
+                detail={`${pantryCount ?? 0} item${pantryCount === 1 ? "" : "s"}`}
+              />
+              <QuickLink
+                href="/preferences"
+                title="Preferences"
+                detail={`${prefCount ?? 0} set`}
+              />
+            </div>
+          </Card>
+
           {/* AI meal planning — premium gated */}
           <Card title="AI meal planning">
             {isPremium ? (
@@ -121,6 +151,26 @@ export default async function DashboardPage() {
         </div>
       </main>
     </>
+  );
+}
+
+function QuickLink({
+  href,
+  title,
+  detail,
+}: {
+  href: string;
+  title: string;
+  detail: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="rounded-xl border border-stone-200 p-4 transition hover:border-brand-300 hover:bg-brand-50"
+    >
+      <div className="font-medium text-stone-900">{title}</div>
+      <div className="mt-0.5 text-sm text-stone-500">{detail}</div>
+    </Link>
   );
 }
 

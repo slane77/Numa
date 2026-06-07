@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NavLink } from "@/components/ui";
 
 /**
  * Top navigation for authenticated pages. Server component; sign-out posts to a
@@ -7,7 +8,7 @@ import Link from "next/link";
 export default function AppNav({ tier }: { tier?: "free" | "premium" }) {
   return (
     <header className="border-b border-stone-200 bg-white">
-      <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
+      <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-3">
         <div className="flex items-center gap-2">
           <Link
             href="/dashboard"
@@ -28,12 +29,11 @@ export default function AppNav({ tier }: { tier?: "free" | "premium" }) {
           )}
         </div>
         <nav className="flex items-center gap-4 text-sm">
-          <Link href="/dashboard" className="hover:text-brand-700">
-            Dashboard
-          </Link>
-          <Link href="/weight" className="hover:text-brand-700">
-            Weight
-          </Link>
+          <NavLink href="/dashboard">Dashboard</NavLink>
+          <NavLink href="/goals">Goals</NavLink>
+          <NavLink href="/weight">Weight</NavLink>
+          <NavLink href="/pantry">Pantry</NavLink>
+          <NavLink href="/preferences">Preferences</NavLink>
           <form action="/auth/signout" method="post">
             <button
               type="submit"
