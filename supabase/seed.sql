@@ -1,0 +1,24 @@
+-- Numa seed data
+--
+-- A few public starter recipes. Because recipes.user_id is NOT NULL and references
+-- auth.users, public/system recipes must be attached to a real account.
+--
+-- Recommended approach: create a dedicated "system" auth user (e.g. via the Supabase
+-- dashboard or admin API), then set the UUID below and run this seed.
+--
+--   set the value, then run: supabase db execute --file supabase/seed.sql
+--
+-- Replace SYSTEM_USER_UUID with the system account's id.
+
+-- Example (uncomment and set the UUID to use):
+--
+-- insert into recipes (user_id, title, servings, calories_per_serving, protein_g, method, source, is_public) values
+--   ('SYSTEM_USER_UUID', 'Chicken & Veg Stir Fry', 2, 520, 42, 'Stir fry chicken with mixed vegetables and soy sauce.', 'Numa', true),
+--   ('SYSTEM_USER_UUID', 'Overnight Oats',          1, 350, 14, 'Combine oats, milk and chia; refrigerate overnight.',     'Numa', true),
+--   ('SYSTEM_USER_UUID', 'Salmon & Quinoa Bowl',    2, 610, 38, 'Bake salmon; serve over quinoa with greens.',             'Numa', true);
+--
+-- Then add ingredients referencing the returned recipe ids, e.g.:
+--
+-- insert into recipe_ingredients (recipe_id, item_name, quantity, unit) values
+--   ('<recipe_uuid>', 'Chicken breast', 300, 'g'),
+--   ('<recipe_uuid>', 'Mixed vegetables', 400, 'g');

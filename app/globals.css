@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  /* Numa brand: warm greens for a "fresh kitchen" feel */
+  --color-brand-50: #f0fdf4;
+  --color-brand-100: #dcfce7;
+  --color-brand-200: #bbf7d0;
+  --color-brand-500: #16a34a;
+  --color-brand-600: #15803d;
+  --color-brand-700: #166534;
+}
+
+html {
+  font-family: var(--font-sans), system-ui, sans-serif;
+}

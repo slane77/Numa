@@ -1,0 +1,52 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getUser } from "@/lib/auth/user";
+import LoginForm from "./LoginForm";
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    mode?: string;
+    redirectedFrom?: string;
+    error?: string;
+  }>;
+}) {
+  const user = await getUser();
+  if (user) redirect("/dashboard");
+
+  const params = await searchParams;
+  const initialMode = params.mode === "signup" ? "signup" : "signin";
+
+  return (
+    <main className="flex flex-1 flex-col items-center justify-center px-6 py-12">
+      <div className="w-full max-w-sm">
+        <div className="mb-8 text-center">
+          <Link
+            href="/"
+            className="text-2xl font-semibold tracking-tight text-brand-700"
+          >
+            Numa
+          </Link>
+          <p className="mt-2 text-sm text-stone-600">
+            {initialMode === "signup"
+              ? "Create your account to start planning."
+              : "Welcome back — sign in to continue."}
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
+          {params.error === "auth_callback_failed" && (
+            <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+              We couldn&apos;t complete that sign-in link. Please try again.
+            </p>
+          )}
+          <LoginForm
+            initialMode={initialMode}
+            redirectedFrom={params.redirectedFrom}
+          />
+        </div>
+      </div>
+    </main>
+  );
+}
