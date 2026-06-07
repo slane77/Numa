@@ -132,9 +132,12 @@ export default async function DashboardPage() {
                   Generate a pantry-aware plan that uses what you already have
                   and lists only what&apos;s missing.
                 </p>
-                <span className="mt-4 inline-block rounded-full bg-stone-100 px-4 py-2 text-sm font-medium text-stone-500">
-                  Coming in the next phase
-                </span>
+                <Link
+                  href="/ai-plan"
+                  className="mt-4 inline-block rounded-full bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+                >
+                  Generate AI plan
+                </Link>
               </>
             ) : (
               <>
@@ -142,9 +145,12 @@ export default async function DashboardPage() {
                   Pantry intelligence, AI meal planning, goal forecasting and
                   advanced shopping optimisation are part of Numa Premium.
                 </p>
-                <span className="mt-4 inline-block rounded-full border border-brand-200 bg-brand-50 px-4 py-2 text-sm font-medium text-brand-700">
-                  Premium feature
-                </span>
+                <Link
+                  href="/ai-plan"
+                  className="mt-4 inline-block rounded-full border border-brand-200 bg-brand-50 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-100"
+                >
+                  Learn more
+                </Link>
               </>
             )}
           </Card>
