@@ -129,10 +129,13 @@ Guidelines:
     .slice(firstUser)
     .map((m) => ({ role: m.role, content: m.content }));
 
-  const client = getAnthropic();
   const saved: SavedPref[] = [];
 
   try {
+    // getAnthropic() can throw if the key is missing — keep it inside the try
+    // so the client gets a clean JSON error instead of a hard failure.
+    const client = getAnthropic();
+
     // Agentic loop: model chats and may call the save tool; we execute and
     // feed results back until it produces a plain-text reply.
     for (let i = 0; i < 5; i++) {

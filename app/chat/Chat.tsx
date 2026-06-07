@@ -50,7 +50,13 @@ export default function Chat() {
         setSaved((s) => [...s, ...data.saved]);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      const raw = err instanceof Error ? err.message : "Something went wrong.";
+      // iOS Safari reports a failed fetch as "Load failed"; make it human.
+      const friendly =
+        /load failed|failed to fetch|networkerror/i.test(raw)
+          ? "Couldn't reach Numa's AI. It may not be configured yet (missing API key / credit) or the request timed out. Please try again."
+          : raw;
+      setError(friendly);
     } finally {
       setLoading(false);
     }
