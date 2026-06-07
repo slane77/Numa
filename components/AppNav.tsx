@@ -28,10 +28,12 @@ export default function AppNav({ tier }: { tier?: "free" | "premium" }) {
             </span>
           )}
         </div>
-        <nav className="flex items-center gap-4 text-sm">
+        <nav className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-sm">
           <NavLink href="/dashboard">Dashboard</NavLink>
           <NavLink href="/goals">Goals</NavLink>
           <NavLink href="/weight">Weight</NavLink>
+          <NavLink href="/recipes">Recipes</NavLink>
+          <NavLink href="/plans">Plans</NavLink>
           <NavLink href="/pantry">Pantry</NavLink>
           <NavLink href="/preferences">Preferences</NavLink>
           <form action="/auth/signout" method="post">
