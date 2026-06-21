@@ -21,16 +21,18 @@ and videos with **no technical skill required**.
 - ✅ **Events** — create with a graphic, RSVP (going/maybe/can't make it), and a
   photo/video gallery anyone can contribute to
 - ✅ **Who's working where** — set your daily status (office / home / away) and
-  see the whole team's week on one board
+  see the whole team's week on one board (approved holidays auto-show as "away")
+- ✅ **Holidays** — variable allowance per person, request flow, and approvals
+  routed to each person's **line manager** (admins/HR can approve anything)
+- ✅ **Admin "People" screen** — set each person's role, line manager and leave
+  allowance
 - ✅ **Drag-and-drop media uploads** (images & short videos) to Supabase Storage
 - ✅ Editable personal profile (name, job title, team, location)
-- ✅ Navigable stubs for the next modules (Guides, Holidays)
+- ✅ Navigable stub for the next module (Guides)
 
 ### Roadmap (next phases)
 
-Holiday requests & approvals (variable allowance per person; routes to each
-person's line manager) → How-to guides (knowledge base) → Staff directory
-search. Approved holidays will feed the "away" status on the Who's-in board.
+How-to guides (knowledge base) → Staff directory search → richer reporting.
 
 ---
 
@@ -64,6 +66,8 @@ the SQL editor, the Supabase CLI, or the MCP `apply_migration` tool:
 - `0005_events.sql` — `events`, `event_rsvps`, `event_media` + RLS
 - `0006_storage_uploads.sql` — let all staff upload (for event galleries)
 - `0007_work_status.sql` — `work_status` (who's in office/home/away) + RLS
+- `0008_holidays.sql` — line-manager + allowance on `profiles`, `holiday_requests`,
+  approval RLS, and a guard so only admins change role/manager/allowance
 
 Regenerate `lib/types/database.ts` after schema changes with the Supabase CLI or
 MCP `generate_typescript_types`.
@@ -133,8 +137,10 @@ app/
     news/               News feed: list, view, create, edit (+ actions)
     events/             Events: list, view, create, edit, RSVP, gallery
     calendar/           Who's working where: set status + team week board
+    holidays/           Request time off, track allowance, manager approvals
+    admin/people/       Admin: set roles, line managers, leave allowances
     profile/            Edit your directory profile
-    guides/ holidays/   Planned modules (navigable stubs)
+    guides/             Planned module (navigable stub)
 components/             AppNav, NavMenu, Logo, PostCard, EventCard,
                         MediaUpload, ComingSoon
 lib/
@@ -143,7 +149,9 @@ lib/
   posts.ts              news queries (author-name joins)
   events.ts             event queries + date formatting + RSVPs
   calendar.ts           who's-in helpers (client-safe)
-  calendar-data.ts      who's-in server queries
+  calendar-data.ts      who's-in server queries (incl. approved leave)
+  holidays.ts           allowance/working-day helpers (client-safe)
+  holidays-data.ts      holiday server queries
   news.ts               categories, colours, date formatting
   types/database.ts     Supabase types
 supabase/migrations/    SQL schema, RLS, storage

@@ -21,6 +21,8 @@ export type Database = {
           location: string | null
           avatar_url: string | null
           role: Database["public"]["Enums"]["user_role"]
+          manager_id: string | null
+          annual_leave_days: number
           created_at: string
           updated_at: string
         }
@@ -32,6 +34,8 @@ export type Database = {
           location?: string | null
           avatar_url?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          manager_id?: string | null
+          annual_leave_days?: number
           created_at?: string
           updated_at?: string
         }
@@ -43,6 +47,53 @@ export type Database = {
           location?: string | null
           avatar_url?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          manager_id?: string | null
+          annual_leave_days?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      holiday_requests: {
+        Row: {
+          id: string
+          user_id: string
+          start_date: string
+          end_date: string
+          working_days: number
+          note: string | null
+          status: Database["public"]["Enums"]["holiday_status"]
+          decided_by: string | null
+          decided_at: string | null
+          decision_note: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          start_date: string
+          end_date: string
+          working_days: number
+          note?: string | null
+          status?: Database["public"]["Enums"]["holiday_status"]
+          decided_by?: string | null
+          decided_at?: string | null
+          decision_note?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          start_date?: string
+          end_date?: string
+          working_days?: number
+          note?: string | null
+          status?: Database["public"]["Enums"]["holiday_status"]
+          decided_by?: string | null
+          decided_at?: string | null
+          decision_note?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -266,6 +317,7 @@ export type Database = {
       user_role: "employee" | "editor" | "admin"
       rsvp_status: "going" | "maybe" | "not_going"
       work_location: "office" | "home" | "away"
+      holiday_status: "pending" | "approved" | "declined" | "cancelled"
     }
     CompositeTypes: Record<never, never>
   }

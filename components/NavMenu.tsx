@@ -26,9 +26,13 @@ function SignOut({ className }: { className?: string }) {
   );
 }
 
-export default function NavMenu() {
+export default function NavMenu({ isAdmin = false }: { isAdmin?: boolean }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+
+  const links = isAdmin
+    ? [...LINKS, { href: "/admin/people", label: "People" }]
+    : LINKS;
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
@@ -37,7 +41,7 @@ export default function NavMenu() {
     <>
       {/* Desktop: inline links */}
       <nav className="hidden items-center gap-5 text-sm lg:flex">
-        {LINKS.map((l) => (
+        {links.map((l) => (
           <Link
             key={l.href}
             href={l.href}
@@ -88,7 +92,7 @@ export default function NavMenu() {
       {open && (
         <div className="absolute inset-x-0 top-full z-40 border-b border-stone-200 bg-white shadow-card lg:hidden">
           <nav className="mx-auto flex max-w-5xl flex-col px-4 py-2">
-            {[...LINKS, { href: "/profile", label: "Me" }].map((l) => (
+            {[...links, { href: "/profile", label: "Me" }].map((l) => (
               <Link
                 key={l.href}
                 href={l.href}

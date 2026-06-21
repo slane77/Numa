@@ -22,7 +22,7 @@ export default function AppNav({ role }: { role?: Role }) {
             </span>
           )}
         </div>
-        <NavMenu />
+        <NavMenu isAdmin={role === "admin"} />
       </div>
     </header>
   );
