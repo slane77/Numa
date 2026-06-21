@@ -10,21 +10,24 @@ and videos with **no technical skill required**.
 
 ---
 
-## What's built (Phase 1)
+## What's built
 
 - ✅ Microsoft 365 sign-in (Azure OAuth) + email fallback
 - ✅ Staff directory (`profiles`) with roles: employee / editor / admin
-- ✅ **Home hub** — greeting, quick links, latest news
+- ✅ Editor **allow-list** — listed work emails become editors automatically on
+  first sign-in (seeded with the comms team)
+- ✅ **Home hub** — greeting, quick links, latest news, what's coming up
 - ✅ **Company news** — create, edit, delete, pin, draft/publish
+- ✅ **Events** — create with a graphic, RSVP (going/maybe/can't make it), and a
+  photo/video gallery anyone can contribute to
 - ✅ **Drag-and-drop media uploads** (images & short videos) to Supabase Storage
 - ✅ Editable personal profile (name, job title, team, location)
-- ✅ Navigable stubs for the next modules (Guides, Events, Who's-in, Holidays)
+- ✅ Navigable stubs for the next modules (Guides, Who's-in, Holidays)
 
 ### Roadmap (next phases)
 
-How-to guides (knowledge base) → Events (graphics, RSVP, photo/video galleries)
-→ Who's-working-where calendar → Holiday requests & approvals → Staff directory
-search.
+Who's-working-where calendar → Holiday requests & approvals → How-to guides
+(knowledge base) → Staff directory search.
 
 ---
 
@@ -54,6 +57,9 @@ the SQL editor, the Supabase CLI, or the MCP `apply_migration` tool:
 - `0001_intranet.sql` — `profiles` + `news_posts`, enums, triggers, role helpers
 - `0002_rls.sql` — Row Level Security (staff read; editors/admins write)
 - `0003_storage.sql` — public `media` bucket for images/videos + write policies
+- `0004_editor_allowlist.sql` — auto-grant editor role from an email allow-list
+- `0005_events.sql` — `events`, `event_rsvps`, `event_media` + RLS
+- `0006_storage_uploads.sql` — let all staff upload (for event galleries)
 
 Regenerate `lib/types/database.ts` after schema changes with the Supabase CLI or
 MCP `generate_typescript_types`.
@@ -66,8 +72,20 @@ MCP `generate_typescript_types`.
 - **editor** — also create/edit news, upload media.
 - **admin** — also manage any content and other people's roles.
 
-Everyone signs in as `employee`. **Promote your first editor/admin** by hand
-(one-time) in the Supabase SQL editor:
+Everyone signs in as `employee` unless their email is on the **editor
+allow-list** (`editor_allowlist`), in which case they're granted that role the
+first time they sign in. Add your team's work emails there:
+
+```sql
+insert into editor_allowlist (email, role, note) values
+  ('you@daywebster.com',        'admin',  'Owner'),
+  ('teammate@daywebster.com',   'editor', 'Comms team')
+on conflict (email) do nothing;
+```
+
+`rebecca.howell@daywebster.com` is seeded as an editor in
+`0004_editor_allowlist.sql`. To change someone who has **already** signed in,
+update their profile directly:
 
 ```sql
 update profiles set role = 'admin'
@@ -107,16 +125,19 @@ app/
   login/                Microsoft 365 + email sign-in
   auth/                 OAuth callback + sign-out route handlers
   (hub)/                Authenticated app shell (top nav + footer)
-    home/               The hub: greeting, quick links, latest news
+    home/               The hub: greeting, quick links, news, upcoming events
     news/               News feed: list, view, create, edit (+ actions)
+    events/             Events: list, view, create, edit, RSVP, gallery
     profile/            Edit your directory profile
-    guides/ events/     Planned modules (navigable stubs)
+    guides/             Planned modules (navigable stubs)
     calendar/ holidays/
-components/             AppNav, NavMenu, Logo, PostCard, MediaUpload, ComingSoon
+components/             AppNav, NavMenu, Logo, PostCard, EventCard,
+                        MediaUpload, ComingSoon
 lib/
   supabase/             server / browser / admin / proxy clients
   auth/user.ts          user + profile + role helpers
   posts.ts              news queries (author-name joins)
+  events.ts             event queries + date formatting + RSVPs
   news.ts               categories, colours, date formatting
   types/database.ts     Supabase types
 supabase/migrations/    SQL schema, RLS, storage

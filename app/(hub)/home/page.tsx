@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { getProfile, getUser, firstName } from "@/lib/auth/user";
 import { getFeedPosts } from "@/lib/posts";
+import { getEvents } from "@/lib/events";
 import PostCard from "@/components/PostCard";
+import EventCard from "@/components/EventCard";
 import { formatDate } from "@/lib/news";
 
 const QUICK_LINKS = [
@@ -12,11 +14,13 @@ const QUICK_LINKS = [
 ];
 
 export default async function HomePage() {
-  const [profile, user, posts] = await Promise.all([
+  const [profile, user, posts, { upcoming }] = await Promise.all([
     getProfile(),
     getUser(),
     getFeedPosts(7),
+    getEvents(),
   ]);
+  const nextEvents = upcoming.slice(0, 3);
   const canPost = profile?.role === "editor" || profile?.role === "admin";
   const greetingName = firstName(profile, user?.email);
 
@@ -60,6 +64,28 @@ export default async function HomePage() {
           </Link>
         ))}
       </section>
+
+      {/* Upcoming events */}
+      {nextEvents.length > 0 && (
+        <section>
+          <div className="mb-4 flex items-end justify-between">
+            <h2 className="text-lg font-semibold text-stone-900">
+              What&apos;s coming up
+            </h2>
+            <Link
+              href="/events"
+              className="text-sm font-medium text-brand-700 hover:underline"
+            >
+              All events
+            </Link>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {nextEvents.map((e) => (
+              <EventCard key={e.id} event={e} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* News */}
       <section>

@@ -48,6 +48,129 @@ export type Database = {
         }
         Relationships: []
       }
+      editor_allowlist: {
+        Row: {
+          email: string
+          role: Database["public"]["Enums"]["user_role"]
+          note: string | null
+          created_at: string
+        }
+        Insert: {
+          email: string
+          role?: Database["public"]["Enums"]["user_role"]
+          note?: string | null
+          created_at?: string
+        }
+        Update: {
+          email?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          note?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      events: {
+        Row: {
+          id: string
+          organiser_id: string | null
+          title: string
+          description: string
+          location: string | null
+          cover_image_url: string | null
+          starts_at: string
+          ends_at: string | null
+          all_day: boolean
+          published: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organiser_id?: string | null
+          title: string
+          description?: string
+          location?: string | null
+          cover_image_url?: string | null
+          starts_at: string
+          ends_at?: string | null
+          all_day?: boolean
+          published?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organiser_id?: string | null
+          title?: string
+          description?: string
+          location?: string | null
+          cover_image_url?: string | null
+          starts_at?: string
+          ends_at?: string | null
+          all_day?: boolean
+          published?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      event_rsvps: {
+        Row: {
+          id: string
+          event_id: string
+          user_id: string
+          status: Database["public"]["Enums"]["rsvp_status"]
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          user_id: string
+          status?: Database["public"]["Enums"]["rsvp_status"]
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          event_id?: string
+          user_id?: string
+          status?: Database["public"]["Enums"]["rsvp_status"]
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      event_media: {
+        Row: {
+          id: string
+          event_id: string
+          uploaded_by: string | null
+          url: string
+          kind: string
+          caption: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          uploaded_by?: string | null
+          url: string
+          kind?: string
+          caption?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          event_id?: string
+          uploaded_by?: string | null
+          url?: string
+          kind?: string
+          caption?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       news_posts: {
         Row: {
           id: string
@@ -111,6 +234,7 @@ export type Database = {
     }
     Enums: {
       user_role: "employee" | "editor" | "admin"
+      rsvp_status: "going" | "maybe" | "not_going"
     }
     CompositeTypes: Record<never, never>
   }
