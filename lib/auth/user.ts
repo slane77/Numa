@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/lib/types/database";
 
 export type Profile = Tables<"profiles">;
+export type Role = Profile["role"];
 
 /**
  * Returns the current authenticated user, or null. Safe in any server context.
@@ -25,7 +26,7 @@ export async function requireUser() {
 }
 
 /**
- * Returns the current user's profile row (or null if not signed in / not created yet).
+ * Returns the current user's profile row (or null if not signed in).
  */
 export async function getProfile(): Promise<Profile | null> {
   const supabase = await createClient();
@@ -43,10 +44,23 @@ export async function getProfile(): Promise<Profile | null> {
   return data;
 }
 
-/**
- * True when the signed-in user is on the premium tier.
- */
-export async function isPremium(): Promise<boolean> {
+/** True when the signed-in user can publish content (editor or admin). */
+export async function isEditor(): Promise<boolean> {
   const profile = await getProfile();
-  return profile?.tier === "premium";
+  return profile?.role === "editor" || profile?.role === "admin";
+}
+
+/** True when the signed-in user is an admin. */
+export async function isAdmin(): Promise<boolean> {
+  const profile = await getProfile();
+  return profile?.role === "admin";
+}
+
+/** Friendly first name for greetings. Falls back to the email handle. */
+export function firstName(
+  profile: Pick<Profile, "display_name"> | null,
+  email?: string | null,
+): string {
+  const name = profile?.display_name?.trim() || email?.split("@")[0] || "there";
+  return name.split(" ")[0];
 }

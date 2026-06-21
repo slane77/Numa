@@ -1,41 +1,42 @@
--- Enable RLS everywhere
-alter table profiles            enable row level security;
-alter table goals               enable row level security;
-alter table weight_logs         enable row level security;
-alter table food_preferences    enable row level security;
-alter table inventory           enable row level security;
-alter table recipes             enable row level security;
-alter table recipe_ingredients  enable row level security;
-alter table meal_plans          enable row level security;
-alter table meal_plan_items     enable row level security;
-alter table shopping_lists      enable row level security;
-alter table shopping_list_items enable row level security;
+-- Row Level Security for the intranet. Everything below assumes the user is an
+-- authenticated member of staff (Microsoft / Google sign-in).
 
--- PROFILES: owner-only (id = auth.uid())
-create policy profiles_select on profiles for select using (id = auth.uid());
-create policy profiles_update on profiles for update using (id = auth.uid());
+alter table profiles   enable row level security;
+alter table news_posts enable row level security;
 
--- Generic owner policy pattern (user_id = auth.uid()) on direct-owned tables
-create policy goals_all            on goals            for all using (user_id = auth.uid()) with check (user_id = auth.uid());
-create policy weight_logs_all      on weight_logs      for all using (user_id = auth.uid()) with check (user_id = auth.uid());
-create policy food_preferences_all on food_preferences for all using (user_id = auth.uid()) with check (user_id = auth.uid());
-create policy inventory_all        on inventory        for all using (user_id = auth.uid()) with check (user_id = auth.uid());
-create policy meal_plans_all       on meal_plans       for all using (user_id = auth.uid()) with check (user_id = auth.uid());
-create policy shopping_lists_all   on shopping_lists   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+-- PROFILES: it's a staff directory, so any signed-in employee can read everyone.
+create policy "profiles readable by staff"
+  on profiles for select
+  to authenticated
+  using (true);
 
--- RECIPES: owner full access + public read
-create policy recipes_owner_all on recipes for all using (user_id = auth.uid()) with check (user_id = auth.uid());
-create policy recipes_public_read on recipes for select using (is_public = true);
+-- You can edit your own profile; admins can edit anyone (e.g. set roles).
+create policy "update own profile"
+  on profiles for update
+  to authenticated
+  using (id = auth.uid() or public.is_admin())
+  with check (id = auth.uid() or public.is_admin());
 
--- Child tables: access governed by parent ownership
-create policy recipe_ingredients_all on recipe_ingredients for all
-  using (exists (select 1 from recipes r where r.id = recipe_id and (r.user_id = auth.uid() or r.is_public)))
-  with check (exists (select 1 from recipes r where r.id = recipe_id and r.user_id = auth.uid()));
+-- NEWS: staff read published posts; editors/admins can see drafts too.
+create policy "read published news"
+  on news_posts for select
+  to authenticated
+  using (published or public.is_editor());
 
-create policy meal_plan_items_all on meal_plan_items for all
-  using (exists (select 1 from meal_plans m where m.id = meal_plan_id and m.user_id = auth.uid()))
-  with check (exists (select 1 from meal_plans m where m.id = meal_plan_id and m.user_id = auth.uid()));
+-- Only editors/admins create posts, and only as themselves.
+create policy "editors create news"
+  on news_posts for insert
+  to authenticated
+  with check (public.is_editor() and author_id = auth.uid());
 
-create policy shopping_list_items_all on shopping_list_items for all
-  using (exists (select 1 from shopping_lists s where s.id = shopping_list_id and s.user_id = auth.uid()))
-  with check (exists (select 1 from shopping_lists s where s.id = shopping_list_id and s.user_id = auth.uid()));
+-- Authors edit their own posts; admins edit any.
+create policy "authors update news"
+  on news_posts for update
+  to authenticated
+  using (author_id = auth.uid() or public.is_admin())
+  with check (author_id = auth.uid() or public.is_admin());
+
+create policy "authors delete news"
+  on news_posts for delete
+  to authenticated
+  using (author_id = auth.uid() or public.is_admin());

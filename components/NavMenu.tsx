@@ -1,19 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 const LINKS = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/goals", label: "Goals" },
-  { href: "/weight", label: "Weight" },
-  { href: "/recipes", label: "Recipes" },
-  { href: "/plans", label: "Plans" },
-  { href: "/shopping", label: "Shopping" },
-  { href: "/pantry", label: "Pantry" },
-  { href: "/preferences", label: "Preferences" },
-  { href: "/chat", label: "Chat" },
-  { href: "/billing", label: "Billing" },
+  { href: "/home", label: "Home" },
+  { href: "/news", label: "News" },
+  { href: "/guides", label: "Guides" },
+  { href: "/events", label: "Events" },
+  { href: "/calendar", label: "Who's in" },
+  { href: "/holidays", label: "Holidays" },
 ];
 
 function SignOut({ className }: { className?: string }) {
@@ -31,16 +28,34 @@ function SignOut({ className }: { className?: string }) {
 
 export default function NavMenu() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  const isActive = (href: string) =>
+    pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <>
       {/* Desktop: inline links */}
-      <nav className="hidden items-center gap-4 text-sm lg:flex">
+      <nav className="hidden items-center gap-5 text-sm lg:flex">
         {LINKS.map((l) => (
-          <Link key={l.href} href={l.href} className="hover:text-brand-700">
+          <Link
+            key={l.href}
+            href={l.href}
+            className={
+              isActive(l.href)
+                ? "font-medium text-brand-700"
+                : "text-stone-600 hover:text-brand-700"
+            }
+          >
             {l.label}
           </Link>
         ))}
+        <Link
+          href="/profile"
+          className="text-stone-600 hover:text-brand-700"
+        >
+          Me
+        </Link>
         <SignOut />
       </nav>
 
@@ -72,13 +87,17 @@ export default function NavMenu() {
       {/* Mobile: dropdown panel */}
       {open && (
         <div className="absolute inset-x-0 top-full z-40 border-b border-stone-200 bg-white shadow-card lg:hidden">
-          <nav className="mx-auto flex max-w-4xl flex-col px-4 py-2">
-            {LINKS.map((l) => (
+          <nav className="mx-auto flex max-w-5xl flex-col px-4 py-2">
+            {[...LINKS, { href: "/profile", label: "Me" }].map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className="rounded-lg px-2 py-3 text-stone-700 hover:bg-stone-50"
+                className={`rounded-lg px-2 py-3 ${
+                  isActive(l.href)
+                    ? "font-medium text-brand-700"
+                    : "text-stone-700 hover:bg-stone-50"
+                }`}
               >
                 {l.label}
               </Link>

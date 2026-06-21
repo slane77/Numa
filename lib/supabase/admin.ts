@@ -3,8 +3,8 @@ import type { Database } from "@/lib/types/database";
 
 /**
  * Service-role Supabase client. Bypasses RLS and column grants — use ONLY in
- * trusted server contexts (e.g. the Stripe webhook) to write tier/billing
- * fields that end users are not permitted to change. Never expose to the client.
+ * trusted server contexts (e.g. an admin tool that promotes a user to
+ * editor/admin). Never expose to the client.
  */
 export function createAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

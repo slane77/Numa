@@ -14,7 +14,7 @@ export default async function LoginPage({
   }>;
 }) {
   const user = await getUser();
-  if (user) redirect("/dashboard");
+  if (user) redirect("/home");
 
   const params = await searchParams;
   const initialMode = params.mode === "signup" ? "signup" : "signin";
@@ -27,9 +27,7 @@ export default async function LoginPage({
             <Logo textClass="text-2xl" markClass="h-8 w-8" />
           </Link>
           <p className="mt-3 text-sm text-stone-600">
-            {initialMode === "signup"
-              ? "Create your account to start planning."
-              : "Welcome back — sign in to continue."}
+            The Day Webster Group intranet. Sign in to continue.
           </p>
         </div>
 

@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Numa — eat well, waste less",
+  title: "The Hub — Day Webster",
   description:
-    "AI meal planning that knows what's already in your kitchen. Plan meals, cut waste, and hit your health goals.",
+    "The Day Webster Group intranet: company news, how-to guides, events, holidays and who's working where.",
 };
 
 export default function RootLayout({
