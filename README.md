@@ -78,18 +78,18 @@ first time they sign in. Add your team's work emails there:
 
 ```sql
 insert into editor_allowlist (email, role, note) values
-  ('you@daywebster.com',        'admin',  'Owner'),
-  ('teammate@daywebster.com',   'editor', 'Comms team')
+  ('scott.lane@daywebster.com',  'admin',  'Owner'),
+  ('teammate@daywebster.com',    'editor', 'Comms team')
 on conflict (email) do nothing;
 ```
 
-`rebecca.howell@daywebster.com` is seeded as an editor in
-`0004_editor_allowlist.sql`. To change someone who has **already** signed in,
-update their profile directly:
+`scott.lane@daywebster.com` (admin) and `rebecca.howell@daywebster.com` (editor)
+are seeded in `0004_editor_allowlist.sql`. To change someone who has **already**
+signed in, update their profile directly:
 
 ```sql
 update profiles set role = 'admin'
-where id = (select id from auth.users where email = 'you@daywebster.com');
+where id = (select id from auth.users where email = 'scott.lane@daywebster.com');
 ```
 
 ---

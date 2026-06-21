@@ -47,5 +47,6 @@ revoke execute on function public.handle_new_user() from public, anon, authentic
 -- Seed the initial editors. Add the rest of your team's work emails here.
 -- (Set role = 'admin' for anyone who should also manage people & all content.)
 insert into editor_allowlist (email, role, note) values
+  ('scott.lane@daywebster.com',    'admin',  'Owner'),
   ('rebecca.howell@daywebster.com', 'editor', 'Comms team')
 on conflict (email) do nothing;
