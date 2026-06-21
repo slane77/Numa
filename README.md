@@ -20,14 +20,17 @@ and videos with **no technical skill required**.
 - ✅ **Company news** — create, edit, delete, pin, draft/publish
 - ✅ **Events** — create with a graphic, RSVP (going/maybe/can't make it), and a
   photo/video gallery anyone can contribute to
+- ✅ **Who's working where** — set your daily status (office / home / away) and
+  see the whole team's week on one board
 - ✅ **Drag-and-drop media uploads** (images & short videos) to Supabase Storage
 - ✅ Editable personal profile (name, job title, team, location)
-- ✅ Navigable stubs for the next modules (Guides, Who's-in, Holidays)
+- ✅ Navigable stubs for the next modules (Guides, Holidays)
 
 ### Roadmap (next phases)
 
-Who's-working-where calendar → Holiday requests & approvals → How-to guides
-(knowledge base) → Staff directory search.
+Holiday requests & approvals (variable allowance per person; routes to each
+person's line manager) → How-to guides (knowledge base) → Staff directory
+search. Approved holidays will feed the "away" status on the Who's-in board.
 
 ---
 
@@ -60,6 +63,7 @@ the SQL editor, the Supabase CLI, or the MCP `apply_migration` tool:
 - `0004_editor_allowlist.sql` — auto-grant editor role from an email allow-list
 - `0005_events.sql` — `events`, `event_rsvps`, `event_media` + RLS
 - `0006_storage_uploads.sql` — let all staff upload (for event galleries)
+- `0007_work_status.sql` — `work_status` (who's in office/home/away) + RLS
 
 Regenerate `lib/types/database.ts` after schema changes with the Supabase CLI or
 MCP `generate_typescript_types`.
@@ -128,9 +132,9 @@ app/
     home/               The hub: greeting, quick links, news, upcoming events
     news/               News feed: list, view, create, edit (+ actions)
     events/             Events: list, view, create, edit, RSVP, gallery
+    calendar/           Who's working where: set status + team week board
     profile/            Edit your directory profile
-    guides/             Planned modules (navigable stubs)
-    calendar/ holidays/
+    guides/ holidays/   Planned modules (navigable stubs)
 components/             AppNav, NavMenu, Logo, PostCard, EventCard,
                         MediaUpload, ComingSoon
 lib/
@@ -138,6 +142,8 @@ lib/
   auth/user.ts          user + profile + role helpers
   posts.ts              news queries (author-name joins)
   events.ts             event queries + date formatting + RSVPs
+  calendar.ts           who's-in helpers (client-safe)
+  calendar-data.ts      who's-in server queries
   news.ts               categories, colours, date formatting
   types/database.ts     Supabase types
 supabase/migrations/    SQL schema, RLS, storage

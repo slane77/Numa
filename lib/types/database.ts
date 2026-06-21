@@ -171,6 +171,36 @@ export type Database = {
         }
         Relationships: []
       }
+      work_status: {
+        Row: {
+          id: string
+          user_id: string
+          day: string
+          location: Database["public"]["Enums"]["work_location"]
+          note: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          day: string
+          location: Database["public"]["Enums"]["work_location"]
+          note?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          day?: string
+          location?: Database["public"]["Enums"]["work_location"]
+          note?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       news_posts: {
         Row: {
           id: string
@@ -235,6 +265,7 @@ export type Database = {
     Enums: {
       user_role: "employee" | "editor" | "admin"
       rsvp_status: "going" | "maybe" | "not_going"
+      work_location: "office" | "home" | "away"
     }
     CompositeTypes: Record<never, never>
   }
