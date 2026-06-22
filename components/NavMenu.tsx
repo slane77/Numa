@@ -11,6 +11,7 @@ const LINKS = [
   { href: "/events", label: "Events" },
   { href: "/calendar", label: "Who's in" },
   { href: "/holidays", label: "Holidays" },
+  { href: "/my-hr", label: "My HR" },
 ];
 
 function SignOut({ className }: { className?: string }) {
@@ -26,13 +27,24 @@ function SignOut({ className }: { className?: string }) {
   );
 }
 
-export default function NavMenu({ isAdmin = false }: { isAdmin?: boolean }) {
+export default function NavMenu({
+  isAdmin = false,
+  isHr = false,
+  hasReports = false,
+}: {
+  isAdmin?: boolean;
+  isHr?: boolean;
+  hasReports?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
-  const links = isAdmin
-    ? [...LINKS, { href: "/admin/people", label: "People" }]
-    : LINKS;
+  const links = [
+    ...LINKS,
+    ...(hasReports ? [{ href: "/team", label: "My team" }] : []),
+    ...(isHr ? [{ href: "/hr", label: "HR" }] : []),
+    ...(isAdmin ? [{ href: "/admin/people", label: "People" }] : []),
+  ];
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);

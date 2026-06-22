@@ -26,13 +26,53 @@ and videos with **no technical skill required**.
   routed to each person's **line manager** (admins/HR can approve anything)
 - ✅ **Admin "People" screen** — set each person's role, line manager and leave
   allowance
+- ✅ **HR back-end** (replaces PeopleHR) — see "HR module" below
 - ✅ **Drag-and-drop media uploads** (images & short videos) to Supabase Storage
 - ✅ Editable personal profile (name, job title, team, location)
 - ✅ Navigable stub for the next module (Guides)
 
 ### Roadmap (next phases)
 
-How-to guides (knowledge base) → Staff directory search → richer reporting.
+How-to guides (knowledge base) → email reminders (HR) → richer reporting.
+
+---
+
+## HR module
+
+A confidential HR back-end so HR has everything in one place:
+
+- **My HR** (every employee) — edit personal details + next of kin, view own
+  pay/start date/service, download own documents, see own appraisals/probation.
+- **HR dashboard** (`/hr`) — what's due: probations ending, appraisals
+  due/overdue, upcoming long-service anniversaries (5/10/15-yr…).
+- **Staff record** (`/hr/people/[id]`) — pay & employment, documents, probation,
+  appraisals, return-to-work, **TOIL** ledger, in one place.
+- **My team** (`/team`) — line managers manage their reports' appraisals,
+  probation, RTW and TOIL (but not pay/documents).
+
+### Access model (enforced by the database, not just the UI)
+
+| Data | Employee (self) | Line manager | HR | Admin |
+| --- | --- | --- | --- | --- |
+| Personal details, next of kin | view + edit | — | view + edit | view + edit |
+| Pay, NI, documents | view own | — | full | full |
+| Appraisals, probation, RTW, TOIL | view own | reports only | full | full |
+
+HR access is a separate **`is_hr`** flag (Rebecca), kept distinct from the site
+`admin` role. Every table has Row Level Security implementing the matrix above,
+plus a trigger that stops anyone but an admin changing role / HR access /
+manager / allowance.
+
+### Security & data protection
+
+- **Private document vault** — the `hr-docs` bucket is **not public**; files are
+  served only via 60-second signed URLs to the owner or HR.
+- **Confidential fields are isolated** in their own tables with strict RLS, so
+  salary/address can't leak through the directory.
+- **Audit log** (`hr_audit`) records HR changes to pay and documents.
+- **UK data residency:** create the Supabase project in the **London
+  (eu-west-2)** region — this is UK employee personal data (UK GDPR).
+- Only admins can grant roles/HR access; the leave year runs **Jan–Dec**.
 
 ---
 
@@ -68,6 +108,10 @@ the SQL editor, the Supabase CLI, or the MCP `apply_migration` tool:
 - `0007_work_status.sql` — `work_status` (who's in office/home/away) + RLS
 - `0008_holidays.sql` — line-manager + allowance on `profiles`, `holiday_requests`,
   approval RLS, and a guard so only admins change role/manager/allowance
+- `0009_hr.sql` — HR tables (personal details, NOK, pay, probation, appraisals,
+  RTW, TOIL, documents, service awards, audit) + the `is_hr` flag
+- `0010_hr_rls.sql` — tiered Row Level Security for all HR tables
+- `0011_hr_storage.sql` — private `hr-docs` bucket (signed-URL access only)
 
 Regenerate `lib/types/database.ts` after schema changes with the Supabase CLI or
 MCP `generate_typescript_types`.

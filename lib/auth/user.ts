@@ -56,6 +56,12 @@ export async function isAdmin(): Promise<boolean> {
   return profile?.role === "admin";
 }
 
+/** True when the signed-in user has HR access (HR flag, or an admin). */
+export async function isHr(): Promise<boolean> {
+  const profile = await getProfile();
+  return !!profile?.is_hr || profile?.role === "admin";
+}
+
 /** Friendly first name for greetings. Falls back to the email handle. */
 export function firstName(
   profile: Pick<Profile, "display_name"> | null,

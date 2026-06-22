@@ -23,6 +23,7 @@ export type Database = {
           role: Database["public"]["Enums"]["user_role"]
           manager_id: string | null
           annual_leave_days: number
+          is_hr: boolean
           created_at: string
           updated_at: string
         }
@@ -36,6 +37,7 @@ export type Database = {
           role?: Database["public"]["Enums"]["user_role"]
           manager_id?: string | null
           annual_leave_days?: number
+          is_hr?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -49,6 +51,7 @@ export type Database = {
           role?: Database["public"]["Enums"]["user_role"]
           manager_id?: string | null
           annual_leave_days?: number
+          is_hr?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -104,18 +107,21 @@ export type Database = {
           email: string
           role: Database["public"]["Enums"]["user_role"]
           note: string | null
+          is_hr: boolean
           created_at: string
         }
         Insert: {
           email: string
           role?: Database["public"]["Enums"]["user_role"]
           note?: string | null
+          is_hr?: boolean
           created_at?: string
         }
         Update: {
           email?: string
           role?: Database["public"]["Enums"]["user_role"]
           note?: string | null
+          is_hr?: boolean
           created_at?: string
         }
         Relationships: []
@@ -249,6 +255,327 @@ export type Database = {
           note?: string | null
           created_at?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      personal_details: {
+        Row: {
+          user_id: string
+          dob: string | null
+          home_address: string | null
+          personal_phone: string | null
+          personal_email: string | null
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          dob?: string | null
+          home_address?: string | null
+          personal_phone?: string | null
+          personal_email?: string | null
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          dob?: string | null
+          home_address?: string | null
+          personal_phone?: string | null
+          personal_email?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      next_of_kin: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          relationship: string | null
+          phone: string | null
+          email: string | null
+          is_primary: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          relationship?: string | null
+          phone?: string | null
+          email?: string | null
+          is_primary?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          relationship?: string | null
+          phone?: string | null
+          email?: string | null
+          is_primary?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
+      hr_records: {
+        Row: {
+          user_id: string
+          start_date: string | null
+          employment_type: string | null
+          salary: number | null
+          pay_period: string
+          ni_number: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          start_date?: string | null
+          employment_type?: string | null
+          salary?: number | null
+          pay_period?: string
+          ni_number?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          start_date?: string | null
+          employment_type?: string | null
+          salary?: number | null
+          pay_period?: string
+          ni_number?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      probation: {
+        Row: {
+          user_id: string
+          end_date: string | null
+          status: string
+          reviewed_by: string | null
+          reviewed_at: string | null
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          end_date?: string | null
+          status?: string
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          end_date?: string | null
+          status?: string
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      appraisals: {
+        Row: {
+          id: string
+          user_id: string
+          due_date: string | null
+          scheduled_for: string | null
+          status: string
+          rating: string | null
+          summary: string | null
+          conducted_by: string | null
+          completed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          due_date?: string | null
+          scheduled_for?: string | null
+          status?: string
+          rating?: string | null
+          summary?: string | null
+          conducted_by?: string | null
+          completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          due_date?: string | null
+          scheduled_for?: string | null
+          status?: string
+          rating?: string | null
+          summary?: string | null
+          conducted_by?: string | null
+          completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rtw_interviews: {
+        Row: {
+          id: string
+          user_id: string
+          absence_start: string | null
+          absence_end: string | null
+          reason: string | null
+          notes: string | null
+          conducted_by: string | null
+          conducted_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          absence_start?: string | null
+          absence_end?: string | null
+          reason?: string | null
+          notes?: string | null
+          conducted_by?: string | null
+          conducted_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          absence_start?: string | null
+          absence_end?: string | null
+          reason?: string | null
+          notes?: string | null
+          conducted_by?: string | null
+          conducted_at?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      toil_entries: {
+        Row: {
+          id: string
+          user_id: string
+          entry_date: string
+          hours: number
+          reason: string | null
+          recorded_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          entry_date?: string
+          hours: number
+          reason?: string | null
+          recorded_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          entry_date?: string
+          hours?: number
+          reason?: string | null
+          recorded_by?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      employee_documents: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          category: string
+          file_path: string
+          content_type: string | null
+          uploaded_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          category?: string
+          file_path: string
+          content_type?: string | null
+          uploaded_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          category?: string
+          file_path?: string
+          content_type?: string | null
+          uploaded_by?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      service_awards: {
+        Row: {
+          id: string
+          user_id: string
+          years: number
+          awarded_on: string
+          note: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          years: number
+          awarded_on?: string
+          note?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          years?: number
+          awarded_on?: string
+          note?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      hr_audit: {
+        Row: {
+          id: string
+          actor_id: string | null
+          subject_id: string | null
+          action: string
+          detail: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          actor_id?: string | null
+          subject_id?: string | null
+          action: string
+          detail?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          actor_id?: string | null
+          subject_id?: string | null
+          action?: string
+          detail?: string | null
+          created_at?: string
         }
         Relationships: []
       }

@@ -7,7 +7,15 @@ import type { Role } from "@/lib/auth/user";
  * Top navigation for authenticated pages. The link list collapses into a
  * hamburger menu on small screens (see NavMenu).
  */
-export default function AppNav({ role }: { role?: Role }) {
+export default function AppNav({
+  role,
+  isHr = false,
+  hasReports = false,
+}: {
+  role?: Role;
+  isHr?: boolean;
+  hasReports?: boolean;
+}) {
   const showBadge = role === "editor" || role === "admin";
   return (
     <header className="sticky top-0 z-30 border-b border-stone-200/80 bg-white/80 backdrop-blur">
@@ -22,7 +30,11 @@ export default function AppNav({ role }: { role?: Role }) {
             </span>
           )}
         </div>
-        <NavMenu isAdmin={role === "admin"} />
+        <NavMenu
+          isAdmin={role === "admin"}
+          isHr={isHr}
+          hasReports={hasReports}
+        />
       </div>
     </header>
   );
