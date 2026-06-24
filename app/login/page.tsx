@@ -24,7 +24,7 @@ export default async function LoginPage({
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
           <Link href="/">
-            <Logo textClass="text-2xl" markClass="h-8 w-8" />
+            <Logo className="h-10" />
           </Link>
           <p className="mt-3 text-sm text-stone-600">
             The Day Webster Group intranet. Sign in to continue.

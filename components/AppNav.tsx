@@ -22,7 +22,7 @@ export default function AppNav({
       <div className="relative mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
         <div className="flex items-center gap-2">
           <Link href="/home">
-            <Logo markClass="h-8 w-8" textClass="text-base" />
+            <Logo className="h-7" />
           </Link>
           {showBadge && (
             <span className="rounded-full bg-brand-100 px-2 py-0.5 text-xs font-medium capitalize text-brand-700">
