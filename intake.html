@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Join Day Webster</title>
+<style>
+  :root {
+    --ink:#1d1d1f; --ink-soft:#6e6e73; --line:#d2d2d7;
+    --field:#f5f5f7; --green:#16a34a; --green-dark:#11833b;
+  }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; font-family:-apple-system,"SF Pro Display","SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif; color:var(--ink); background:#fff; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+
+  .nav { position:sticky; top:0; z-index:20; height:64px; display:flex; align-items:center; justify-content:center;
+         background:rgba(255,255,255,.72); backdrop-filter:saturate(180%) blur(20px); -webkit-backdrop-filter:saturate(180%) blur(20px);
+         border-bottom:1px solid rgba(0,0,0,.07); }
+  .nav img { height:38px; }
+
+  .hero { text-align:center; padding:72px 20px 30px; }
+  .hero h1 { font-size:clamp(36px,6.5vw,58px); line-height:1.04; letter-spacing:-.025em; font-weight:700; margin:0 0 16px; }
+  .hero .accent { background:linear-gradient(90deg,#16a34a,#0ea5a4); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .hero p { font-size:clamp(17px,2.4vw,21px); color:var(--ink-soft); max-width:30em; margin:0 auto; line-height:1.45; }
+
+  .wrap { max-width:600px; margin:0 auto 72px; padding:0 20px; }
+  .card { background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:28px; padding:clamp(24px,5vw,44px); box-shadow:0 18px 50px rgba(0,0,0,.07); }
+
+  label { display:block; font-size:13px; font-weight:600; color:var(--ink); margin:18px 0 7px; letter-spacing:-.01em; }
+  input, select, textarea {
+    width:100%; padding:14px 15px; font-size:16px; font-family:inherit; color:var(--ink);
+    background:var(--field); border:1px solid transparent; border-radius:13px;
+    transition:background .18s ease, border-color .18s ease, box-shadow .18s ease; appearance:none; -webkit-appearance:none;
+  }
+  textarea { resize:vertical; }
+  input::placeholder, textarea::placeholder { color:#a1a1a6; }
+  input:focus, select:focus, textarea:focus {
+    outline:none; background:#fff; border-color:var(--green); box-shadow:0 0 0 4px rgba(22,163,74,.16);
+  }
+  select {
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'><path d='M1 1l5 5 5-5' stroke='%236e6e73' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat:no-repeat; background-position:right 15px center; padding-right:40px;
+  }
+  .row { display:flex; gap:14px; } .row > div { flex:1; }
+  @media (max-width:460px){ .row { flex-direction:column; gap:0; } }
+
+  fieldset { border:1px solid var(--line); border-radius:20px; padding:10px 20px 22px; margin:28px 0 0; }
+  legend { font-size:13px; font-weight:700; color:var(--ink); padding:0 8px; }
+  .hint { font-size:12.5px; color:var(--ink-soft); line-height:1.55; margin:8px 0 4px; }
+
+  .friend { border-top:1px solid var(--line); padding-top:14px; margin-top:16px; }
+  .friend:first-child { border-top:0; padding-top:6px; margin-top:6px; }
+  .friend .fhead { display:flex; justify-content:space-between; align-items:center; }
+  .friend .fhead span { font-size:12px; font-weight:700; color:var(--ink-soft); letter-spacing:.02em; text-transform:uppercase; }
+  .rm { width:auto; background:#fff; color:#d11; border:1px solid var(--line); padding:6px 13px; font-size:12px; font-weight:600; margin:0; cursor:pointer; border-radius:980px; transition:.15s ease; }
+  .rm:hover { background:#fff5f5; border-color:#f1c4c4; }
+  .addbtn { width:auto; background:#fff; color:var(--green); border:1px solid var(--green); padding:10px 20px; font-size:14px; font-weight:600; border-radius:980px; margin-top:16px; cursor:pointer; transition:.15s ease; }
+  .addbtn:hover { background:var(--green); color:#fff; }
+
+  .consent { display:flex; gap:11px; align-items:flex-start; margin:22px 0 4px; font-size:13.5px; color:var(--ink-soft); line-height:1.5; }
+  .consent input { width:20px; height:20px; margin-top:1px; accent-color:var(--green); }
+
+  .submit { width:100%; background:var(--green); color:#fff; border:0; border-radius:980px; padding:16px; font-size:17px; font-weight:600; margin-top:24px; cursor:pointer; transition:transform .12s ease, background .18s ease, box-shadow .18s ease; box-shadow:0 8px 22px rgba(22,163,74,.28); }
+  .submit:hover { background:var(--green-dark); transform:translateY(-1px); box-shadow:0 12px 28px rgba(22,163,74,.34); }
+  .submit:active { transform:translateY(0); }
+  .submit:disabled { opacity:.5; box-shadow:none; transform:none; }
+
+  .hp { position:absolute; left:-9999px; }
+  .msg { margin-top:16px; font-size:14.5px; text-align:center; }
+  .ok { color:var(--green); font-weight:600; }
+  .err { color:#d11; }
+  .hidden { display:none; }
+  .privacy { margin:18px auto 0; font-size:12px; color:var(--ink-soft); text-align:center; max-width:34em; line-height:1.5; }
+  .footer { text-align:center; color:var(--ink-soft); font-size:12px; padding:30px 0 50px; }
+</style>
+</head>
+<body>
+  <div class="nav"><img src="dw-logo.svg" alt="Day Webster Group" /></div>
+
+  <header class="hero">
+    <h1>Your next role <span class="accent">starts here.</span></h1>
+    <p>Register with Day Webster in under a minute — nursing, doctors, allied health, care and more. The right consultant will be in touch.</p>
+    <p id="chatOption" class="hidden" style="margin-top:16px;"><a href="chat.html" style="display:inline-block;background:#fff;color:var(--green);border:1px solid var(--green);border-radius:980px;padding:10px 20px;font-weight:600;font-size:15px;text-decoration:none;">💬 Prefer to chat? Register by chat →</a></p>
+  </header>
+
+  <div class="wrap">
+    <div class="card">
+    <form id="form">
+      <div class="row">
+        <div><label>First name</label><input name="first_name" required /></div>
+        <div><label>Last name</label><input name="last_name" required /></div>
+      </div>
+      <label>Email</label><input type="email" name="email" required />
+      <label>Mobile number</label><input name="phone" inputmode="tel" />
+      <div class="row">
+        <div><label>Profession</label>
+          <select name="discipline_code" id="disc" required><option value="">Select…</option></select>
+        </div>
+        <div><label>Speciality / role</label>
+          <select name="specialty_code" id="spec"><option value="">Select…</option></select>
+        </div>
+      </div>
+      <label>Which area are you mainly looking for work?</label>
+      <select name="region">
+        <option value="">Prefer not to say</option>
+        <option value="North">North of England</option>
+        <option value="South">South of England</option>
+        <option value="Other">Elsewhere / nationwide</option>
+      </select>
+      <label>Home address</label><input name="address" placeholder="House/flat & street" />
+      <div class="row">
+        <div><label>Town</label><input name="town" id="town" /></div>
+        <div><label>Postcode</label><input name="postcode" id="postcode" /><small id="pcMsg" style="font-size:12px;color:var(--ink-soft);"></small></div>
+      </div>
+      <label>National Insurance number (optional)</label><input name="ni_number" id="ni" placeholder="e.g. QQ123456C — helps us identify you" /><small id="niMsg" style="font-size:12px;color:var(--ink-soft);"></small>
+      <input type="hidden" name="latitude" /><input type="hidden" name="longitude" />
+      <label>Availability (optional)</label><input name="availability" placeholder="e.g. immediate, days/nights, from June" />
+
+      <label>How did you hear about us?</label>
+      <select name="heard_about" id="heard">
+        <option value="">Select…</option>
+        <option value="Indeed">Indeed</option>
+        <option value="Reed">Reed</option>
+        <option value="CV-Library / Totaljobs">CV-Library / Totaljobs</option>
+        <option value="NHS Jobs">NHS Jobs</option>
+        <option value="Google search">Google search</option>
+        <option value="Facebook">Facebook</option>
+        <option value="Instagram">Instagram</option>
+        <option value="TikTok">TikTok</option>
+        <option value="LinkedIn">LinkedIn</option>
+        <option value="X / Twitter">X / Twitter</option>
+        <option value="WhatsApp">WhatsApp</option>
+        <option value="Word of mouth">Word of mouth — someone recommended you</option>
+        <option value="Returning candidate">I've worked with Day Webster before</option>
+        <option value="Day Webster staff">A Day Webster employee</option>
+        <option value="Job fair / event">Job fair / event</option>
+        <option value="Flyer / poster / QR">Flyer / poster / QR code</option>
+        <option value="Day Webster website">Day Webster website</option>
+        <option value="Email">Email from Day Webster</option>
+        <option value="Other">Other</option>
+      </select>
+      <div id="referrerWrap" class="hidden">
+        <label>Who recommended you?</label>
+        <input name="referrer_name" placeholder="Their name (so we can say thank you)" />
+      </div>
+
+      <fieldset>
+        <legend>Refer a friend — earn up to £350 each</legend>
+        <p class="hint">Know people looking for work? Refer as many as you like and earn a reward for each once they complete <strong>100 hours</strong> with us: Doctors £350 · Nurses &amp; AHPs £150 · HCAs, Carers &amp; care home staff £50. Referral rewards are for registered Day Webster Group candidates. Please only share details of people happy to hear from us.</p>
+        <div id="friends"></div>
+        <button type="button" id="addFriend" class="addbtn">+ Add another friend</button>
+      </fieldset>
+
+      <label>Anything else? (optional)</label><textarea name="message" rows="3"></textarea>
+      <input class="hp" name="website" tabindex="-1" autocomplete="off" />
+      <input type="hidden" name="vacancy" /><input type="hidden" name="campaign" />
+      <div class="consent">
+        <input type="checkbox" id="consent" required />
+        <label for="consent" style="font-weight:400; margin:0;">I consent to Day Webster storing my details and contacting me about work opportunities. I can withdraw consent at any time.</label>
+      </div>
+      <button type="submit" class="submit" id="submit">Register</button>
+      <div class="msg" id="msg"></div>
+    </form>
+    </div>
+    <p class="privacy">Your details are held securely and used only to discuss work with Day Webster.</p>
+  </div>
+  <div class="footer">© Day Webster — connecting great people with great work.</div>
+
+<script src="js/config.js"></script>
+<script>
+const FN = window.CONFIG.SUPABASE_URL + '/functions/v1/candidate-intake';
+if (window.CONFIG.CHAT_ENABLED) document.getElementById('chatOption')?.classList.remove('hidden');
+
+// Discipline → specialties taxonomy (mirrors the database seed) so registrants
+// and their referrals self-route to the right desk without a logged-in call.
+const TAXONOMY = {
+  nursing:      { name:'Nursing', specs:[['general','General Nursing'],['ward','Ward Nursing'],['ae','A&E Nursing'],['itu','ITU/ICU Nursing'],['theatres','Theatres'],['theatres_odp','Theatres (ODP)'],['midwifery','Midwifery'],['neonatal','Neonatal'],['paediatrics','Paediatrics'],['rmn','RMN (Mental Health)'],['hca','Healthcare Assistant'],['primary_care','Primary Care'],['anp','Advanced Nurse Practitioner'],['enp','Emergency Nurse Practitioner']] },
+  doctors:      { name:'Doctor', specs:[['general','General / Locum'],['gp','GP'],['specialty','Specialty Doctor'],['consultant','Consultant']] },
+  complex_care: { name:'Complex Care', specs:[['nurse','Nurse (NMC)'],['carer','Carer / Support Worker']] },
+  ahp:          { name:'Allied Health (AHP)', specs:[['physio','Physiotherapy'],['ot','Occupational Therapy'],['slt','Speech & Language Therapy'],['dietetics','Dietetics'],['radiography','Radiography'],['paramedic','Paramedic'],['podiatry','Podiatry']] },
+  childrens:    { name:"Children's Services", specs:[['carer',"Children's Home Carer"],['senior','Senior Residential Worker'],['registered_mgr','Registered Manager']] },
+  care_homes:   { name:'Care Home', specs:[['care_assistant','Care Assistant'],['senior_carer','Senior Carer'],['nurse','Nurse (Care Home)'],['registered_mgr','Registered Manager']] },
+  insurance:    { name:'Insurance', specs:[['underwriter','Underwriter'],['broker','Broker'],['claims','Claims']] },
+};
+function fillDiscipline(sel){ for (const [code, d] of Object.entries(TAXONOMY)) sel.add(new Option(d.name, code)); }
+function wireSpecs(discSel, specSel){
+  discSel.addEventListener('change', () => {
+    specSel.innerHTML = '<option value="">Select…</option>';
+    (TAXONOMY[discSel.value]?.specs || []).forEach(([c, n]) => specSel.add(new Option(n, c)));
+  });
+}
+const disc = document.getElementById('disc'), spec = document.getElementById('spec');
+fillDiscipline(disc); wireSpecs(disc, spec);
+
+// Show "who recommended you?" only for word of mouth.
+document.getElementById('heard').addEventListener('change', (e) => {
+  document.getElementById('referrerWrap').classList.toggle('hidden', e.target.value !== 'Word of mouth');
+});
+
+// Repeatable refer-a-friend rows.
+const friendsWrap = document.getElementById('friends');
+function addFriendRow() {
+  const row = document.createElement('div');
+  row.className = 'friend';
+  row.innerHTML =
+    '<div class="fhead"><span>Friend ' + (friendsWrap.children.length + 1) + '</span><button type="button" class="rm">Remove</button></div>' +
+    '<div class="row"><div><label>Name</label><input class="f-name" /></div><div><label>Mobile</label><input class="f-phone" inputmode="tel" /></div></div>' +
+    '<label>Email</label><input class="f-email" type="email" />' +
+    '<div class="row"><div><label>Their profession</label><select class="f-disc"><option value="">Select…</option></select></div>' +
+    '<div><label>Their speciality / role</label><select class="f-spec"><option value="">Select…</option></select></div></div>';
+  const fdisc = row.querySelector('.f-disc'), fspec = row.querySelector('.f-spec');
+  fillDiscipline(fdisc); wireSpecs(fdisc, fspec);
+  row.querySelector('.rm').onclick = () => { row.remove(); renumber(); };
+  friendsWrap.appendChild(row);
+}
+function renumber(){ [...friendsWrap.children].forEach((r,i)=>{ r.querySelector('.fhead span').textContent = 'Friend ' + (i+1); }); }
+document.getElementById('addFriend').onclick = addFriendRow;
+addFriendRow(); // start with one (optional) row
+
+// Postcode lookup (postcodes.io — free, no key): validate, autofill town, geocode.
+const pcEl = document.getElementById('postcode'), pcMsg = document.getElementById('pcMsg');
+pcEl?.addEventListener('blur', async () => {
+  const v = pcEl.value.trim(); if (!v) { pcMsg.textContent = ''; return; }
+  pcMsg.style.color = 'var(--ink-soft)'; pcMsg.textContent = 'Checking…';
+  try {
+    const r = await fetch('https://api.postcodes.io/postcodes/' + encodeURIComponent(v));
+    const j = await r.json();
+    if (j.status === 200 && j.result) {
+      const res = j.result;
+      document.querySelector('[name=latitude]').value = res.latitude ?? '';
+      document.querySelector('[name=longitude]').value = res.longitude ?? '';
+      const town = document.getElementById('town');
+      if (town && !town.value) town.value = res.admin_district || res.parish || res.region || '';
+      pcEl.value = res.postcode;
+      pcMsg.style.color = 'var(--green)'; pcMsg.textContent = '✓ ' + (res.admin_district || res.region || 'Found');
+    } else { pcMsg.style.color = '#dc2626'; pcMsg.textContent = 'We couldn’t find that postcode — please check it.'; }
+  } catch { pcMsg.textContent = ''; }
+});
+// NI light format check (format only — not a real-world verification).
+const niEl = document.getElementById('ni'), niMsg = document.getElementById('niMsg');
+niEl?.addEventListener('blur', () => {
+  const v = niEl.value.trim().toUpperCase().replace(/\s+/g, ''); if (!v) { niMsg.textContent = ''; return; }
+  const ok = /^[A-Z]{2}[0-9]{6}[A-Z]$/.test(v);
+  niMsg.style.color = ok ? 'var(--green)' : '#b45309';
+  niMsg.textContent = ok ? '✓ Looks right' : 'Just check that’s right (usually 2 letters, 6 digits, 1 letter — e.g. QQ123456C). You can still continue.';
+});
+
+// Attribution: ?vacancy=<slug>&campaign=<id> (set on adverts / landing links)
+const qp = new URLSearchParams(location.search);
+if (qp.get('vacancy')) document.querySelector('[name=vacancy]').value = qp.get('vacancy');
+if (qp.get('campaign')) document.querySelector('[name=campaign]').value = qp.get('campaign');
+
+document.getElementById('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const f = e.target, msg = document.getElementById('msg'), btn = document.getElementById('submit');
+  const data = Object.fromEntries(new FormData(f).entries());
+  data.consent = document.getElementById('consent').checked;
+  // Gather referred friends (only rows with a name or email).
+  data.friends = [...friendsWrap.children].map((r) => ({
+    name: r.querySelector('.f-name').value.trim(),
+    email: r.querySelector('.f-email').value.trim(),
+    phone: r.querySelector('.f-phone').value.trim(),
+    discipline_code: r.querySelector('.f-disc').value,
+    specialty_code: r.querySelector('.f-spec').value,
+  })).filter((x) => x.name || x.email);
+  btn.disabled = true; msg.textContent = 'Submitting…'; msg.className = 'msg';
+  try {
+    const res = await fetch(FN, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': window.CONFIG.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.CONFIG.SUPABASE_ANON_KEY },
+      body: JSON.stringify(data),
+    });
+    const out = await res.json();
+    if (out.ok) {
+      f.reset();
+      spec.innerHTML = '<option value="">Select…</option>';
+      friendsWrap.innerHTML = ''; addFriendRow();
+      document.getElementById('referrerWrap').classList.add('hidden');
+      msg.className = 'msg ok';
+      const base = 'Thank you — you are registered.' + (out.referred > 0 ? (' We’ll reach out to the ' + out.referred + (out.referred === 1 ? ' friend' : ' friends') + ' you referred.') : ' The right consultant will be in touch.');
+      if (out.portal_token) {
+        msg.innerHTML = base + '<br><br><a href="portal.html?t=' + out.portal_token + '" style="display:inline-block;background:var(--green);color:#fff;border-radius:980px;padding:12px 24px;font-weight:600;text-decoration:none;">Upload your documents →</a><br><span style="color:var(--ink-soft);font-size:13px;display:block;margin-top:8px;">Save this link — it’s your private page to send us documents any time.</span>';
+      } else { msg.textContent = base; }
+    } else { msg.className = 'msg err'; msg.textContent = out.error || 'Something went wrong. Please try again.'; btn.disabled = false; }
+  } catch (err) { msg.className = 'msg err'; msg.textContent = 'Network error. Please try again.'; btn.disabled = false; }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vacancies — Day Webster Compliance Portal</title>
+<link rel="stylesheet" href="dw-theme.css" />
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="dashboard.html"><img src="dw-logo.svg" alt="Day Webster Group" /></a><span class="wordmark">Compliance Portal</span>
+  <nav class="topnav"><a href="dashboard.html">Dashboard</a><a href="candidates.html">Candidates</a><a class="here" href="vacancies.html">Vacancies</a><a href="candidate-import.html">Import</a><a href="compliance.html">Compliance</a><a href="admin.html">Admin</a></nav>
+</header>
+<main style="max-width:920px;">
+  <div class="loginwrap card hidden" id="login">
+    <h3 style="margin-top:0">Sign in</h3><p class="muted">Day Webster email &amp; password.</p>
+    <div class="loginform"><input type="email" id="email" placeholder="you@daywebster.com"/><input type="password" id="password" placeholder="Password"/><button class="btn" id="loginBtn">Sign in</button></div>
+    <p class="muted" id="loginMsg"></p>
+  </div>
+
+  <div id="app" class="hidden">
+    <div class="card">
+      <h3 style="margin-top:0">New vacancy</h3>
+      <label>Title</label><input id="title" placeholder="e.g. Theatres Nurse (RGN)"/>
+      <div class="row">
+        <div><label>Discipline</label><select id="disc"></select></div>
+        <div><label>Specialty</label><select id="spec"><option value="">—</option></select></div>
+      </div>
+      <div class="row">
+        <div><label>Town</label><input id="town"/></div>
+        <div><label>Region</label><input id="region"/></div>
+      </div>
+      <div class="row">
+        <div><label>Pay</label><input id="pay" placeholder="Band 5 / £18–22/hr"/></div>
+        <div><label>Type</label><select id="etype"><option value="">—</option><option>full_time</option><option>part_time</option><option>contract</option><option>temporary</option></select></div>
+      </div>
+      <label>Notes for the advert (optional)</label><textarea id="notes" rows="2" placeholder="shifts, setting, must-haves…"></textarea>
+      <div style="margin-top:14px;"><button class="btn" id="gen">Generate advert</button> <span class="muted" id="genMsg"></span></div>
+    </div>
+
+    <div class="card hidden" id="result">
+      <h3 style="margin-top:0">Generated</h3>
+      <p class="muted">Public job page: <a id="pub" target="_blank"></a></p>
+      <h4>Description</h4><pre id="desc"></pre>
+      <div class="row"><div><h4>Indeed</h4><pre id="ad_indeed"></pre></div><div><h4>Reed</h4><pre id="ad_reed"></pre></div><div><h4>CV-Library</h4><pre id="ad_cvlibrary"></pre></div></div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0">Open vacancies</h3>
+      <table><thead><tr><th>Title</th><th>Discipline</th><th>Location</th><th>Public page</th></tr></thead><tbody id="rows"></tbody></table>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script>
+const sb = window.supabase.createClient(window.CONFIG.SUPABASE_URL, window.CONFIG.SUPABASE_ANON_KEY, { db:{ schema:'candidate' } });
+const JOB_FN = window.CONFIG.SUPABASE_URL + '/functions/v1/job-advert';
+const JOBS_PUB = window.CONFIG.SUPABASE_URL + '/functions/v1/jobs?slug=';
+const $ = (id)=>document.getElementById(id);
+let disciplines=[], specialties=[];
+
+function refreshAuth(session){ if(session){sb.from('app_users').upsert({user_id:session.user.id,email:session.user.email,full_name:session.user.user_metadata?.full_name||null,last_seen:new Date().toISOString()}).then(()=>{});$('login').classList.add('hidden');$('app').classList.remove('hidden');init();} else {$('login').classList.remove('hidden');$('app').classList.add('hidden');} }
+sb.auth.onAuthStateChange((_e,session)=>refreshAuth(session));
+$('loginBtn').onclick=async()=>{const email=$('email').value.trim(),password=$('password').value;if(!email||!password)return;$('loginMsg').textContent='Signing in…';const {error}=await sb.auth.signInWithPassword({email,password});$('loginMsg').textContent=error?error.message:'';};
+$('password').addEventListener('keydown',ev=>{if(ev.key==='Enter')$('loginBtn').click();});
+
+let inited=false;
+async function init(){ if(inited)return; inited=true;
+  const [{data:d},{data:s}]=await Promise.all([sb.from('disciplines').select('id,code,name').order('sort_order'),sb.from('specialties').select('id,code,name,discipline_id').order('sort_order')]);
+  disciplines=d||[]; specialties=s||[];
+  $('disc').innerHTML='<option value="">—</option>'+disciplines.map(x=>`<option value="${x.code}" data-id="${x.id}">${x.name}</option>`).join('');
+  $('disc').onchange=()=>{ const id=$('disc').selectedOptions[0]?.dataset.id; $('spec').innerHTML='<option value="">—</option>'+specialties.filter(x=>x.discipline_id===id).map(x=>`<option value="${x.code}">${x.name}</option>`).join(''); };
+  loadList();
+}
+async function loadList(){
+  const {data}=await sb.from('vacancies').select('slug,title,town,region,disciplines(name)').eq('status','open').order('date_posted',{ascending:false});
+  $('rows').innerHTML=(data||[]).map(v=>`<tr><td>${v.title||''}</td><td>${v.disciplines?.name||'—'}</td><td>${[v.town,v.region].filter(Boolean).join(', ')}</td><td><a href="${JOBS_PUB+encodeURIComponent(v.slug)}" target="_blank">view</a></td></tr>`).join('')||'<tr><td colspan="4" class="muted">None yet.</td></tr>';
+}
+$('gen').onclick=async()=>{
+  if(!$('title').value.trim()){$('genMsg').textContent='Title required';return;}
+  $('gen').disabled=true;$('genMsg').textContent='Writing advert…';
+  const {data:{session}}=await sb.auth.getSession();
+  const body={create:{title:$('title').value.trim(),discipline_code:$('disc').value||null,specialty_code:$('spec').value||null,town:$('town').value||null,region:$('region').value||null,pay:$('pay').value||null,employment_type:$('etype').value||null,notes:$('notes').value||null}};
+  try{
+    const res=await fetch(JOB_FN,{method:'POST',headers:{'Content-Type':'application/json','apikey':window.CONFIG.SUPABASE_ANON_KEY,'Authorization':'Bearer '+(session?.access_token??'')},body:JSON.stringify(body)});
+    const out=await res.json();
+    if(out.error){$('genMsg').textContent='Error: '+out.error;}
+    else{
+      $('genMsg').textContent='Done ✓';
+      $('desc').textContent=out.description; $('ad_indeed').textContent=out.channels.indeed; $('ad_reed').textContent=out.channels.reed; $('ad_cvlibrary').textContent=out.channels.cvlibrary;
+      const url=JOBS_PUB+encodeURIComponent(out.slug); $('pub').textContent=url; $('pub').href=url;
+      $('result').classList.remove('hidden'); loadList();
+    }
+  }catch(e){$('genMsg').textContent='Error: '+e;}
+  $('gen').disabled=false;
+};
+sb.auth.getSession().then(({data:{session}})=>refreshAuth(session));
+</script>
+</body>
+</html>
