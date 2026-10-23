@@ -23,5 +23,12 @@ window.CONFIG = {
   SUPABASE_URL: 'https://heugpopauuhkrimdfrep.supabase.co',
   SUPABASE_ANON_KEY: 'sb_publishable_9ehpkWFt9wtqVf3DfkMuEA_7ZTK3qd9',
 
-  CHAT_ENABLED: true
+  CHAT_ENABLED: true,
+
+  // Managed Services (msp.html / js/msp.js). The msp_* tables currently live
+  // on the Urgent Staffing Outreach project. To move them onto the Numa
+  // project, run supabase/msp_schema.sql there and point these two values at
+  // the Numa URL/key above.
+  MSP_SUPABASE_URL: 'https://udttpnaenmyxviuiwxqw.supabase.co',
+  MSP_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkdHRwbmFlbm15eHZpdWl3eHF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNzAwODIsImV4cCI6MjA5NDc0NjA4Mn0.b7zeFYbNPSo7WjFu6-VFhMVelD2g1ja9m3af0Jb5geU'
 };

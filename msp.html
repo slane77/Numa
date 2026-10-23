@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Managed Services — Day Webster</title>
+<link rel="stylesheet" href="dw-theme.css" />
+<style>
+  .pill.mut{ background:var(--field); color:var(--ink-soft); box-shadow:inset 0 0 0 1px var(--hair); }
+  .pill.red{ background:var(--red-l); color:var(--red); box-shadow:inset 0 0 0 1px var(--red-line); }
+  .pipeline{ display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-bottom:18px; }
+  .stage{ background:var(--card); border:1px solid var(--card-line); border-radius:14px; padding:12px 14px; }
+  .stage .h{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-dim); margin-bottom:6px; }
+  .stage .n{ font-size:26px; font-weight:700; color:#fff; }
+  .stage.active{ border-color:var(--blue-line); box-shadow:0 0 24px -10px var(--blue-glow); }
+  .svchead{ display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; margin-bottom:14px; }
+  .svchead h1{ margin:0 0 4px; font-size:24px; }
+  .svchead .meta{ color:var(--ink-soft); font-size:13px; }
+  .svchead .right{ margin-left:auto; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .toolbar{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+  .toolbar input, .toolbar select{ padding:8px 11px; font-size:13.5px; }
+  input.cell, select.cell{ padding:6px 8px; font-size:13px; border-radius:8px; width:100%; }
+  input.cell.num{ text-align:right; width:88px; }
+  td.tight{ padding:6px 6px; }
+  .rota{ overflow-x:auto; }
+  .rota table{ min-width:900px; }
+  .rota th.day{ text-align:center; }
+  .shiftchip{ display:block; font-size:12px; border-radius:9px; padding:5px 7px; margin:3px 0; border:1px solid var(--line); background:var(--field); cursor:pointer; }
+  .shiftchip.open{ border-color:var(--red-line); background:var(--red-l); color:var(--red); }
+  .shiftchip.filled{ border-color:var(--amber-line); background:var(--amber-l); color:var(--amber); }
+  .shiftchip.confirmed, .shiftchip.worked{ border-color:var(--green-line); background:var(--green-l); color:var(--green); }
+  .shiftchip.sick, .shiftchip.cancelled{ opacity:.55; text-decoration:line-through; }
+  .shiftchip small{ display:block; opacity:.8; font-size:10.5px; }
+  .qitem{ border-bottom:1px solid var(--hair); padding:10px 0; }
+  .qitem .q{ font-size:13.5px; margin-bottom:6px; }
+  .qitem textarea{ width:100%; min-height:40px; font-size:13px; padding:8px 10px; }
+  .task{ display:flex; gap:10px; align-items:center; border-bottom:1px solid var(--hair); padding:8px 0; font-size:13.5px; flex-wrap:wrap; }
+  .task .t{ flex:1; min-width:220px; }
+  .task.done .t{ text-decoration:line-through; color:var(--ink-dim); }
+  .task select{ padding:5px 28px 5px 8px; font-size:12px; }
+  .task input[type=date]{ padding:5px 8px; font-size:12px; }
+  .calc{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; }
+  .calc .box{ background:var(--field); border:1px solid var(--hair); border-radius:12px; padding:12px 14px; }
+  .calc .box .k{ font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.05em; }
+  .calc .box .v{ font-size:22px; font-weight:700; color:#fff; margin-top:2px; }
+  .calc .box .s{ font-size:12px; color:var(--ink-soft); }
+  .calc .box.good .v{ color:var(--green); } .calc .box.bad .v{ color:var(--red); } .calc .box.warn .v{ color:var(--amber); }
+  .inline{ display:inline-flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .inline label{ margin:0; }
+  .section-title{ display:flex; align-items:center; gap:10px; margin:0 0 12px; }
+  .section-title h3{ margin:0; }
+  .section-title .sp{ flex:1; }
+  .modal{ position:fixed; inset:0; background:rgba(2,4,8,.66); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; z-index:70; padding:20px; }
+  .modal .card{ width:min(640px,100%); max-height:92vh; overflow:auto; margin:0; }
+  .empty{ color:var(--ink-soft); font-size:13px; padding:14px 0; }
+  .err{ background:var(--red-l); border:1px solid var(--red-line); color:var(--red); border-radius:12px; padding:10px 12px; font-size:13px; margin-bottom:12px; }
+  .toastwrap{ position:fixed; bottom:18px; right:18px; z-index:90; display:flex; flex-direction:column; gap:8px; }
+  .toast{ background:var(--card-solid); border:1px solid var(--blue-line); color:var(--ink); padding:10px 14px; border-radius:12px; font-size:13px; box-shadow:var(--shadow); }
+  .toast.err{ border-color:var(--red-line); color:var(--red); }
+  @media (max-width:720px){ .svchead .right{ margin-left:0; } }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="msp.html"><img src="dw-logo.svg" alt="Day Webster Group" /></a><span class="wordmark">Managed Services</span>
+  <nav class="topnav">
+    <a class="here" href="msp.html">Services</a>
+    <a href="dashboard.html">Compliance Portal</a>
+    <a href="candidates.html">Candidates</a>
+    <a href="admin.html">Admin</a>
+    <a href="#" id="signout" class="hidden">Sign out</a>
+  </nav>
+</header>
+
+<div class="loginwrap card hidden" id="login">
+  <h3 style="margin-top:0">Sign in</h3><p class="muted">Day Webster email &amp; password.</p>
+  <div class="loginform"><input id="email" type="email" placeholder="you@daywebster.com"/><input id="password" type="password" placeholder="Password"/><button class="btn" id="loginBtn">Sign in</button></div>
+  <p class="muted" id="loginMsg"></p>
+</div>
+
+<main id="app" class="hidden"></main>
+<div class="toastwrap" id="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4"></script>
+<script src="js/config.js"></script>
+<script src="js/msp.js"></script>
+</body>
+</html>
