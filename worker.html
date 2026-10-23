@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>My shifts — Day Webster</title>
+<link rel="stylesheet" href="dw-theme.css" />
+<style>
+  main{ max-width:720px; }
+  .shift{ border:1px solid var(--card-line); border-radius:14px; padding:14px 16px; margin-bottom:10px; background:var(--card); }
+  .shift .top{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .shift .when{ font-weight:600; font-size:15px; }
+  .shift .acts{ margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .shift input[type=number]{ width:90px; padding:8px 10px; }
+  .shift input[type=text]{ flex:1; min-width:160px; padding:8px 10px; font-size:13px; }
+  .pill.mut{ background:var(--field); color:var(--ink-soft); box-shadow:inset 0 0 0 1px var(--hair); }
+  .pill.red{ background:var(--red-l); color:var(--red); box-shadow:inset 0 0 0 1px var(--red-line); }
+  .avail{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .avail .d{ text-align:center; font-size:12px; padding:8px 2px; border-radius:10px; border:1px solid var(--line); background:var(--field); cursor:pointer; user-select:none; }
+  .avail .d small{ display:block; color:var(--ink-dim); font-size:10px; }
+  .avail .d.available{ background:var(--green-l); border-color:var(--green-line); color:var(--green); }
+  .avail .d.preferred{ background:var(--blue-ghost); border-color:var(--blue-line); color:var(--blue-bright); }
+  .avail .d.unavailable{ background:var(--red-l); border-color:var(--red-line); color:var(--red); }
+  .avail .d.booked{ outline:2px solid var(--amber); }
+  .toastwrap{ position:fixed; bottom:18px; right:18px; z-index:90; display:flex; flex-direction:column; gap:8px; }
+  .toast{ background:var(--card-solid); border:1px solid var(--blue-line); color:var(--ink); padding:10px 14px; border-radius:12px; font-size:13px; }
+  .toast.err{ border-color:var(--red-line); color:var(--red); }
+</style>
+</head>
+<body>
+<header class="topbar"><a class="brand" href="#"><img src="dw-logo.svg" alt="Day Webster Group" /></a><span class="wordmark">My shifts</span></header>
+<main id="app"><p class="muted">Loading…</p></main>
+<div class="toastwrap" id="toasts"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4"></script>
+<script src="js/config.js"></script>
+<script>
+const sb = window.supabase.createClient(window.CONFIG.MSP_SUPABASE_URL, window.CONFIG.MSP_SUPABASE_ANON_KEY);
+const token = new URLSearchParams(location.search).get('t');
+const $ = (id) => document.getElementById(id);
+const esc = (s) => (s ?? '').toString().replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const today = () => new Date().toISOString().slice(0, 10);
+const addDays = (iso, n) => { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+const fmt = (iso) => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+const hhmm = (t) => (t || '').slice(0, 5);
+function toast(msg, err) { const t = document.createElement('div'); t.className = 'toast' + (err ? ' err' : ''); t.textContent = msg; $('toasts').appendChild(t); setTimeout(() => t.remove(), err ? 6000 : 2500); }
+let pending = {};
+async function load() {
+  if (!token) return $('app').innerHTML = '<div class="card"><h3>Link missing</h3><p class="muted">Use the personal link Day Webster sent you.</p></div>';
+  const { data, error } = await sb.rpc('msp_worker_home', { p_token: token });
+  if (error || !data) return $('app').innerHTML = `<div class="card"><h3>Link not recognised</h3><p class="muted">${esc(error?.message || 'This link is no longer active. Contact the Day Webster team.')}</p></div>`;
+  const w = data.worker, mine = data.my_shifts || [], open = data.open_shifts || [], av = data.availability || {};
+  const upcoming = mine.filter(x => x.date >= today()), past = mine.filter(x => x.date < today());
+  const toConfirm = upcoming.filter(x => x.status === 'filled'), toSubmit = past.filter(x => !x.submitted && ['filled', 'confirmed', 'worked'].includes(x.status) && x.ts_status !== 'invoiced');
+  const days = [...Array(28)].map((_, i) => addDays(today(), i)), booked = new Set(upcoming.map(x => x.date));
+  $('app').innerHTML = `
+    <h1 style="font-size:22px;margin:4px 0 2px">Hi ${esc(w.name.split(' ')[0])}</h1>
+    <p class="muted">${esc(w.role || '')} · ${esc(w.service)} · ${esc(w.client)}${w.compliance !== 'cleared' ? ' · <span class="pill flag">compliance ' + esc(w.compliance.replace('_', ' ')) + '</span>' : ''}</p>
+    ${toConfirm.length || toSubmit.length ? `<div class="note">${toConfirm.length ? `${toConfirm.length} shift${toConfirm.length > 1 ? 's' : ''} to confirm. ` : ''}${toSubmit.length ? `${toSubmit.length} timesheet${toSubmit.length > 1 ? 's' : ''} to submit.` : ''}</div>` : ''}
+    ${toSubmit.length ? `<div class="card"><h3>Submit your hours</h3>${toSubmit.map(x => shiftCard(x, 'submit')).join('')}</div>` : ''}
+    <div class="card"><h3>Upcoming shifts</h3>${upcoming.map(x => shiftCard(x, 'upcoming')).join('') || '<p class="muted">Nothing booked yet.</p>'}</div>
+    ${open.length ? `<div class="card"><h3>Open shifts you can take</h3><p class="muted">First to accept gets it.</p>${open.map(x => `<div class="shift"><div class="top"><span class="when">${fmt(x.date)} · ${hhmm(x.start)}–${hhmm(x.end)}</span><span class="pill info">${esc(x.role)}</span><span style="flex:1"></span><button class="btn sm" data-accept="${x.id}">Take this shift</button></div></div>`).join('')}</div>` : ''}
+    <div class="card"><h3>My availability — next 4 weeks</h3><p class="muted">Tap a day to cycle: available → preferred → unavailable → clear. Days with a ring are already booked.</p>
+      <div class="avail">${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<div class="muted" style="text-align:center;font-size:11px">${d}</div>`).join('')}${[...Array((new Date(days[0] + 'T00:00:00').getDay() + 6) % 7)].map(() => '<div></div>').join('')}${days.map(d => `<div class="d ${av[d] || ''} ${booked.has(d) ? 'booked' : ''}" data-day="${d}">${new Date(d + 'T00:00:00').getDate()}<small>${av[d] ? av[d].slice(0, 5) : ''}</small></div>`).join('')}</div>
+      <div style="margin-top:12px"><button class="btn sm" id="saveAv" disabled>Save availability</button></div></div>
+    ${past.length ? `<div class="card"><h3>Recent shifts</h3><table><thead><tr><th>Date</th><th>Time</th><th class="r">Hours</th><th>Status</th></tr></thead><tbody>${past.filter(x => x.submitted || x.status === 'sick').slice(-12).reverse().map(x => `<tr><td>${fmt(x.date)}</td><td>${hhmm(x.start)}–${hhmm(x.end)}</td><td class="r">${x.hours_worked ?? x.worker_hours ?? ''}</td><td><span class="pill ${x.ts_status === 'queried' ? 'red' : x.ts_status === 'pending' ? 'mut' : ''}">${x.status === 'sick' ? 'sick' : x.ts_status}</span>${x.query ? `<div class="muted" style="font-size:11px">Query: ${esc(x.query)}</div>` : ''}</td></tr>`).join('')}</tbody></table></div>` : ''}
+    <p class="muted" style="font-size:12px">This link is personal to you. Problems? Contact your Day Webster service manager.</p>`;
+  document.querySelectorAll('[data-accept]').forEach(b => b.onclick = async () => { b.disabled = true; const { data: ok, error } = await sb.rpc('msp_worker_accept', { p_token: token, p_shift: b.dataset.accept }); if (error) { toast(error.message, true); b.disabled = false; return; } toast(ok ? 'Confirmed' : 'Sorry — that shift has just gone'); load(); });
+  document.querySelectorAll('[data-submit]').forEach(b => b.onclick = async () => { const card = b.closest('.shift'); const h = Number(card.querySelector('input[type=number]').value); if (!h || h <= 0) return toast('Enter the hours you worked', true); b.disabled = true; const { data: ok, error } = await sb.rpc('msp_worker_submit', { p_token: token, p_shift: b.dataset.submit, p_hours: h, p_notes: card.querySelector('input[type=text]').value || null }); if (error || !ok) { toast(error?.message || 'Could not submit', true); b.disabled = false; return; } toast('Hours submitted'); load(); });
+  pending = {};
+  document.querySelectorAll('.avail .d[data-day]').forEach(el => el.onclick = () => { const cycle = ['', 'available', 'preferred', 'unavailable']; const cur = ['available', 'preferred', 'unavailable'].find(c => el.classList.contains(c)) || ''; const next = cycle[(cycle.indexOf(cur) + 1) % cycle.length]; el.classList.remove('available', 'preferred', 'unavailable'); if (next) el.classList.add(next); el.querySelector('small').textContent = next ? next.slice(0, 5) : ''; pending[el.dataset.day] = next || 'clear'; $('saveAv').disabled = false; });
+  $('saveAv').onclick = async () => { const { error } = await sb.rpc('msp_worker_availability', { p_token: token, p_days: pending }); if (error) return toast(error.message, true); toast('Availability saved'); load(); };
+}
+function shiftCard(x, mode) {
+  const st = x.status === 'filled' ? '<span class="pill flag">please confirm</span>' : x.status === 'confirmed' ? '<span class="pill">confirmed</span>' : x.status === 'sick' ? '<span class="pill mut">sick</span>' : x.status === 'worked' ? '<span class="pill">worked</span>' : `<span class="pill mut">${x.status}</span>`;
+  return `<div class="shift"><div class="top"><span class="when">${fmt(x.date)} · ${hhmm(x.start)}–${hhmm(x.end)}</span>${st}<span class="muted">${x.planned_hours}h paid${x.break ? `, ${x.break} min unpaid break` : ''}</span></div>
+    ${mode === 'upcoming' && x.status === 'filled' ? `<div class="acts"><button class="btn sm" data-accept="${x.id}">Confirm I'll be there</button></div>` : ''}
+    ${mode === 'submit' ? `<div class="acts"><input type="number" step="0.25" value="${x.planned_hours}"> hrs <input type="text" placeholder="Notes (breaks, late finish, etc.)" value="${esc(x.worker_notes || '')}"><button class="btn sm" data-submit="${x.id}">Submit</button>${x.query ? `<div class="muted" style="width:100%;color:var(--amber)">Query from client: ${esc(x.query)}</div>` : ''}</div>` : ''}
+  </div>`;
+}
+load();
+</script>
+</body>
+</html>

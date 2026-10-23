@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Service dashboard — Day Webster</title>
+<link rel="stylesheet" href="dw-theme.css" />
+<style>
+  .pill.mut{ background:var(--field); color:var(--ink-soft); box-shadow:inset 0 0 0 1px var(--hair); }
+  .pill.red{ background:var(--red-l); color:var(--red); box-shadow:inset 0 0 0 1px var(--red-line); }
+  .rota{ overflow-x:auto; } .rota table{ min-width:860px; } .rota th.day{ text-align:center; }
+  .chip{ display:block; font-size:12px; border-radius:9px; padding:5px 7px; margin:3px 0; border:1px solid var(--line); background:var(--field); }
+  .chip.open{ border-color:var(--red-line); background:var(--red-l); color:var(--red); }
+  .chip.filled,.chip.confirmed,.chip.worked{ border-color:var(--green-line); background:var(--green-l); color:var(--green); }
+  .chip.sick{ opacity:.6; text-decoration:line-through; }
+  .chip small{ display:block; opacity:.85; font-size:10.5px; }
+  .toolbar{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+  .toastwrap{ position:fixed; bottom:18px; right:18px; z-index:90; display:flex; flex-direction:column; gap:8px; }
+  .toast{ background:var(--card-solid); border:1px solid var(--blue-line); color:var(--ink); padding:10px 14px; border-radius:12px; font-size:13px; }
+  .toast.err{ border-color:var(--red-line); color:var(--red); }
+</style>
+</head>
+<body>
+<header class="topbar"><a class="brand" href="#"><img src="dw-logo.svg" alt="Day Webster Group" /></a><span class="wordmark">Service dashboard</span></header>
+<main id="app"><p class="muted">Loading…</p></main>
+<div class="toastwrap" id="toasts"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4"></script>
+<script src="js/config.js"></script>
+<script>
+const sb = window.supabase.createClient(window.CONFIG.MSP_SUPABASE_URL, window.CONFIG.MSP_SUPABASE_ANON_KEY);
+const token = new URLSearchParams(location.search).get('t');
+const $ = (id) => document.getElementById(id);
+const esc = (s) => (s ?? '').toString().replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const today = () => new Date().toISOString().slice(0, 10);
+const addDays = (iso, n) => { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+const fmt = (iso) => iso ? new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
+const hhmm = (t) => (t || '').slice(0, 5);
+const gbp = (n) => '£' + (Number(n) || 0).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function toast(msg, err) { const t = document.createElement('div'); t.className = 'toast' + (err ? ' err' : ''); t.textContent = msg; $('toasts').appendChild(t); setTimeout(() => t.remove(), err ? 6000 : 2500); }
+let week = null, approver = localStorage.getItem('msp_approver') || '';
+async function load() {
+  if (!token) return $('app').innerHTML = '<div class="card"><h3>Link missing</h3></div>';
+  const { data, error } = await sb.rpc('msp_client_home', { p_token: token, p_week: week });
+  if (error || !data) return $('app').innerHTML = `<div class="card"><h3>Link not recognised</h3><p class="muted">${esc(error?.message || 'Contact your Day Webster service manager.')}</p></div>`;
+  const s = data.service, k = data.kpis || {}, ws = s.week_start, days = [...Array(7)].map((_, i) => addDays(ws, i));
+  week = ws;
+  const roles = [...new Set((data.rota || []).map(r => r.role))];
+  const pend = data.pending_timesheets || [];
+  $('app').innerHTML = `
+    <h1 style="font-size:22px;margin:4px 0 2px">${esc(s.name)}</h1><p class="muted">${esc(s.client)} · ${esc(s.site || '')} · provided by Day Webster</p>
+    <div class="kpis">
+      <div class="kpi ${k.fill_14d != null && k.fill_14d < 90 ? 'warn' : 'good'}"><div class="n">${k.fill_14d != null ? k.fill_14d + '%' : '—'}</div><div class="l">Fill rate, next 14 days</div></div>
+      <div class="kpi"><div class="n">${k.fill_4w != null ? k.fill_4w + '%' : '—'}</div><div class="l">Fill rate, last 4 weeks</div></div>
+      <div class="kpi"><div class="n">${Number(k.hours_4w || 0).toLocaleString('en-GB', { maximumFractionDigits: 0 })}</div><div class="l">Hours delivered, last 4 weeks</div></div>
+      <div class="kpi"><div class="n">${k.sick_4w || 0}</div><div class="l">Sickness absences covered</div></div>
+      <div class="kpi ${k.open_incidents ? 'flag' : ''}"><div class="n">${k.open_incidents || 0}</div><div class="l">Open incidents</div></div>
+      <div class="kpi ${pend.length ? 'flag' : ''}"><div class="n">${pend.length}</div><div class="l">Timesheets awaiting your approval</div></div>
+    </div>
+    ${pend.length ? `<div class="card"><h3>Timesheets to approve</h3><p class="muted">Hours submitted by the worker. Approve, or query with a note and we'll come back to you.</p>
+      <label>Your name (recorded against the approval)</label><input id="approver" value="${esc(approver)}" placeholder="Name, role" style="max-width:320px">
+      <table style="margin-top:10px"><thead><tr><th><input type="checkbox" id="selAll" checked></th><th>Date</th><th>Role</th><th>Worker</th><th>Time</th><th class="r">Hours</th><th>Notes</th></tr></thead><tbody>${pend.map(p => `<tr data-id="${p.id}"><td><input type="checkbox" class="sel" checked></td><td>${fmt(p.date)}</td><td>${esc(p.role)}</td><td>${esc(p.worker || '')}</td><td>${hhmm(p.start)}–${hhmm(p.end)}</td><td class="r">${p.hours}</td><td class="muted">${esc(p.notes || '')}</td></tr>`).join('')}</tbody></table>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn" id="approve">Approve selected</button><button class="btn secondary" id="query">Query selected</button></div></div>` : ''}
+    <div class="toolbar"><button class="btn sm secondary" id="prev">‹</button><strong>Rota — week of ${fmt(ws)}</strong><button class="btn sm secondary" id="next">›</button><button class="btn sm secondary" id="thisW">This week</button></div>
+    <div class="card rota"><table><thead><tr><th>Role</th>${days.map(d => `<th class="day">${fmt(d)}</th>`).join('')}</tr></thead><tbody>
+      ${roles.map(r => `<tr><td><strong>${esc(r)}</strong></td>${days.map(d => `<td>${(data.rota || []).filter(x => x.role === r && x.date === d).map(x => `<span class="chip ${x.status}">${hhmm(x.start)}–${hhmm(x.end)}<small>${x.worker ? esc(x.worker) : x.status === 'open' ? 'being filled' : x.status}</small></span>`).join('')}</td>`).join('')}</tr>`).join('') || '<tr><td colspan="8" class="muted">No shifts this week.</td></tr>'}
+    </tbody></table></div>
+    <div class="two">
+      <div class="card"><h3>Incidents &amp; escalations</h3>${(data.incidents || []).map(i => `<div style="padding:7px 0;border-bottom:1px solid var(--hair);font-size:13px">${fmt(i.date)} · <span class="pill ${i.kind === 'safeguarding' ? 'red' : 'flag'}">${i.kind}</span> · ${i.status}</div>`).join('') || '<p class="muted">None logged.</p>'}</div>
+      <div class="card"><h3>Invoices</h3><table><thead><tr><th>Number</th><th>Period</th><th class="r">Total</th><th>Status</th></tr></thead><tbody>${(data.invoices || []).map(i => `<tr><td>${esc(i.number)}</td><td>${fmt(i.period_from)} – ${fmt(i.period_to)}</td><td class="r">${gbp(i.total)}</td><td><span class="pill ${i.status === 'paid' ? '' : 'flag'}">${i.status}</span></td></tr>`).join('') || '<tr><td colspan="4" class="muted">None yet.</td></tr>'}</tbody></table></div>
+    </div>
+    <p class="muted" style="font-size:12px">Questions about this service: contact your Day Webster service manager.</p>`;
+  $('prev').onclick = () => { week = addDays(ws, -7); load(); }; $('next').onclick = () => { week = addDays(ws, 7); load(); }; $('thisW').onclick = () => { week = null; load(); };
+  if (pend.length) {
+    $('selAll').onchange = e => document.querySelectorAll('.sel').forEach(c => c.checked = e.target.checked);
+    const sel = () => [...document.querySelectorAll('.sel:checked')].map(c => c.closest('tr').dataset.id);
+    const who = () => { approver = $('approver').value.trim(); if (!approver) { toast('Please enter your name', true); return null; } localStorage.setItem('msp_approver', approver); return approver; };
+    $('approve').onclick = async () => { const by = who(); if (!by) return; const ids = sel(); if (!ids.length) return; const { data: n, error } = await sb.rpc('msp_client_approve', { p_token: token, p_shifts: ids, p_by: by }); if (error) return toast(error.message, true); toast(`${n} approved — thank you`); load(); };
+    $('query').onclick = async () => { const by = who(); if (!by) return; const ids = sel(); if (!ids.length) return; const q = prompt('What should we check?'); if (!q) return; const { data: n, error } = await sb.rpc('msp_client_approve', { p_token: token, p_shifts: ids, p_by: by, p_query: q }); if (error) return toast(error.message, true); toast(`${n} queried — we'll come back to you`); load(); };
+  }
+}
+load();
+</script>
+</body>
+</html>

@@ -27,6 +27,18 @@
       "destination": "/msp.html"
     },
     {
+      "source": "/invoice",
+      "destination": "/invoice.html"
+    },
+    {
+      "source": "/client",
+      "destination": "/client.html"
+    },
+    {
+      "source": "/worker",
+      "destination": "/worker.html"
+    },
+    {
       "source": "/portal-home",
       "destination": "/dashboard.html"
     },

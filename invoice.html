@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Invoice — Day Webster</title>
+<style>
+  :root{ --ink:#111827; --soft:#6b7280; --line:#e5e7eb; --blue:#1f76bc; }
+  *{ box-sizing:border-box; } body{ margin:0; background:#f3f4f6; color:var(--ink); font-family:-apple-system,"Inter","Helvetica Neue",Arial,sans-serif; font-size:13px; }
+  .bar{ background:#fff; border-bottom:1px solid var(--line); padding:10px 20px; display:flex; gap:10px; align-items:center; }
+  .bar button, .bar a{ background:var(--blue); color:#fff; border:0; border-radius:8px; padding:8px 14px; font-size:13px; cursor:pointer; text-decoration:none; }
+  .bar .sec{ background:#fff; color:var(--ink); border:1px solid var(--line); }
+  .page{ background:#fff; width:210mm; min-height:297mm; margin:20px auto; padding:18mm 16mm; box-shadow:0 10px 40px rgba(0,0,0,.08); }
+  .head{ display:flex; justify-content:space-between; align-items:flex-start; gap:20px; }
+  .head img{ height:36px; } .head h1{ margin:0; font-size:26px; letter-spacing:-.02em; } .head .muted{ color:var(--soft); }
+  .meta{ display:grid; grid-template-columns:1fr 1fr; gap:20px; margin:22px 0; }
+  .meta .box{ border:1px solid var(--line); border-radius:8px; padding:12px 14px; } .meta .k{ font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--soft); margin-bottom:4px; }
+  table{ width:100%; border-collapse:collapse; } th,td{ text-align:left; padding:8px 8px; border-bottom:1px solid var(--line); vertical-align:top; } th{ font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--soft); } td.r,th.r{ text-align:right; white-space:nowrap; }
+  .tot td{ border:0; padding:5px 8px; } .tot .grand td{ font-size:16px; font-weight:700; border-top:2px solid var(--ink); padding-top:10px; }
+  .foot{ margin-top:28px; color:var(--soft); font-size:11px; line-height:1.5; border-top:1px solid var(--line); padding-top:12px; }
+  .draft{ position:absolute; right:30mm; top:40mm; transform:rotate(-18deg); font-size:64px; font-weight:800; color:rgba(220,38,38,.12); letter-spacing:.1em; pointer-events:none; }
+  .page{ position:relative; }
+  h3{ font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--soft); margin:22px 0 8px; }
+  @media print{ body{ background:#fff; } .bar{ display:none; } .page{ margin:0; box-shadow:none; width:auto; min-height:auto; padding:10mm 12mm; } .pb{ page-break-before:always; } }
+  #login{ max-width:380px; margin:60px auto; background:#fff; padding:20px; border-radius:12px; border:1px solid var(--line); } #login input{ width:100%; padding:10px; margin:6px 0; border:1px solid var(--line); border-radius:8px; }
+</style>
+</head>
+<body>
+<div class="bar"><a class="sec" href="msp.html">← Managed Services</a><button onclick="window.print()">Print / Save as PDF</button><button class="sec" id="schedBtn">Toggle backing schedule</button><span id="status" style="color:var(--soft)"></span></div>
+<div id="login" style="display:none"><h3 style="margin-top:0">Sign in</h3><input id="email" type="email" placeholder="you@daywebster.com"><input id="password" type="password" placeholder="Password"><button class="sec" id="loginBtn" style="background:var(--blue);color:#fff;border:0;border-radius:8px;padding:9px 14px">Sign in</button><p id="loginMsg" style="color:var(--soft)"></p></div>
+<div id="doc"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4"></script>
+<script src="js/config.js"></script>
+<script>
+const sb = window.supabase.createClient(window.CONFIG.MSP_SUPABASE_URL, window.CONFIG.MSP_SUPABASE_ANON_KEY);
+const id = new URLSearchParams(location.search).get('id');
+const $ = (i) => document.getElementById(i);
+const esc = (s) => (s ?? '').toString().replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const gbp = (n) => (Number(n) < 0 ? '−' : '') + '£' + Math.abs(Number(n) || 0).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt = (iso) => iso ? new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+const fmtS = (iso) => iso ? new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
+const hhmm = (t) => (t || '').slice(0, 5);
+const COMPANY = { name: 'Day Webster Limited', addr: 'Unit 107W, Sterling House, Langston Road, Loughton, Essex IG10 3TS', reg: 'Registered in England & Wales no. 07061135 · Registered office: 2 Leman Street, London E1W 9US', vat: 'VAT no. 980 7130 18', email: 'accounts@daywebster.com' };
+let showSched = true;
+sb.auth.onAuthStateChange((_e, session) => { if (session) { $('login').style.display = 'none'; load(); } else { $('login').style.display = 'block'; } });
+$('loginBtn').onclick = async () => { const { error } = await sb.auth.signInWithPassword({ email: $('email').value.trim(), password: $('password').value }); $('loginMsg').textContent = error ? error.message : ''; };
+$('schedBtn').onclick = () => { showSched = !showSched; load(); };
+async function load() {
+  const [{ data: inv, error }, { data: lines }] = await Promise.all([sb.from('msp_invoices').select('*, msp_services(*)').eq('id', id).single(), sb.from('msp_invoice_lines').select('*').eq('invoice_id', id).order('sort')]);
+  if (error || !inv) return $('doc').innerHTML = `<div class="page">Invoice not found. ${esc(error?.message || '')}</div>`;
+  const s = inv.msp_services, L = lines || [], shifts = L.filter(l => l.kind === 'shift'), other = L.filter(l => l.kind !== 'shift');
+  document.title = `${inv.number} — ${s.client}`;
+  $('status').textContent = `${inv.status.toUpperCase()} · created ${new Date(inv.created_at).toLocaleDateString('en-GB')}`;
+  // summary by role + day type
+  const byRole = {}; shifts.forEach(l => { const role = l.description.split(' · ')[1] || ''; const k = `${role} @ ${gbp(l.rate)}/hr`; byRole[k] = byRole[k] || { role, rate: l.rate, qty: 0, amount: 0 }; byRole[k].qty += Number(l.qty); byRole[k].amount += Number(l.amount); });
+  $('doc').innerHTML = `<div class="page">${inv.status === 'draft' ? '<div class="draft">DRAFT</div>' : inv.status === 'void' ? '<div class="draft">VOID</div>' : ''}
+    <div class="head"><div><img src="dw-logo.svg" alt="Day Webster"><div class="muted" style="margin-top:8px">${esc(COMPANY.name)}<br>${esc(COMPANY.addr)}<br>${esc(COMPANY.email)}</div></div>
+      <div style="text-align:right"><h1>${inv.kind === 'credit_note' ? 'CREDIT NOTE' : 'INVOICE'}</h1><div style="font-size:16px;font-weight:600">${esc(inv.number)}</div><div class="muted">Date ${fmt(inv.created_at.slice(0, 10))}${inv.due_date && inv.kind !== 'credit_note' ? `<br>Due ${fmt(inv.due_date)} (${s.invoice_terms_days} days)` : ''}${inv.credits_invoice_id ? '<br>Credit against invoice' : ''}</div></div></div>
+    <div class="meta"><div class="box"><div class="k">Bill to</div><strong>${esc(s.client)}</strong><br>${esc(s.billing_contact || '')}${s.billing_contact ? '<br>' : ''}${esc(s.billing_address || '').replace(/\n/g, '<br>')}</div>
+      <div class="box"><div class="k">Details</div>Service: <strong>${esc(s.name)}</strong><br>Site: ${esc(s.site || '')}<br>Period: ${fmt(inv.period_from)} – ${fmt(inv.period_to)}<br>PO reference: <strong>${esc(inv.po_ref || '—')}</strong><br>Framework: ${esc(s.framework || '')}</div></div>
+    <table><thead><tr><th>Description</th><th class="r">Qty</th><th>Unit</th><th class="r">Rate</th><th class="r">Amount</th></tr></thead><tbody>
+      ${Object.values(byRole).map(r => `<tr><td>${esc(r.role)} — clinical staffing, ${fmtS(inv.period_from)} to ${fmtS(inv.period_to)}</td><td class="r">${r.qty.toFixed(2)}</td><td>hrs</td><td class="r">${gbp(r.rate)}</td><td class="r">${gbp(r.amount)}</td></tr>`).join('')}
+      ${other.map(l => `<tr><td>${esc(l.description)}</td><td class="r">${Number(l.qty).toFixed(2)}</td><td>${esc(l.unit)}</td><td class="r">${gbp(l.rate)}</td><td class="r">${gbp(l.amount)}</td></tr>`).join('')}
+      ${!L.length ? '<tr><td colspan="5" class="muted">No lines.</td></tr>' : ''}
+    </tbody></table>
+    <table class="tot" style="width:320px;margin-left:auto;margin-top:10px"><tr><td>Net</td><td class="r">${gbp(inv.subtotal)}</td></tr><tr><td>VAT @ ${inv.vat_rate}%</td><td class="r">${gbp(inv.vat)}</td></tr><tr class="grand"><td>Total ${inv.kind === 'credit_note' ? 'credit' : 'due'}</td><td class="r">${gbp(inv.total)}</td></tr></table>
+    ${inv.notes ? `<p><strong>Notes:</strong> ${esc(inv.notes)}</p>` : ''}
+    <div class="foot">Payment by BACS to Day Webster Limited — bank details as per supplier set-up. Please quote <strong>${esc(inv.number)}</strong>${inv.po_ref ? ` and PO <strong>${esc(inv.po_ref)}</strong>` : ''} on remittance. Hours are as authorised by the Trust's nominated approver; the backing schedule lists every shift.<br>${esc(COMPANY.reg)} · ${esc(COMPANY.vat)}</div>
+    </div>
+    ${showSched && shifts.length ? `<div class="page pb"><h3 style="margin-top:0">Backing schedule — ${esc(inv.number)} · ${shifts.length} shifts</h3>
+      <table><thead><tr><th>Date</th><th>Role</th><th>Worker</th><th>Time</th><th class="r">Hours</th><th class="r">Rate</th><th class="r">Amount</th></tr></thead><tbody>
+      ${shifts.map(l => { const [d, role, who, t] = l.description.split(' · '); return `<tr><td>${esc(d)}</td><td>${esc(role)}</td><td>${esc(who)}</td><td>${esc(t)}</td><td class="r">${Number(l.qty).toFixed(2)}</td><td class="r">${gbp(l.rate)}</td><td class="r">${gbp(l.amount)}</td></tr>`; }).join('')}
+      <tr><td colspan="4"><strong>Total</strong></td><td class="r"><strong>${shifts.reduce((a, l) => a + Number(l.qty), 0).toFixed(2)}</strong></td><td></td><td class="r"><strong>${gbp(shifts.reduce((a, l) => a + Number(l.amount), 0))}</strong></td></tr></tbody></table></div>` : ''}`;
+}
+</script>
+</body>
+</html>
